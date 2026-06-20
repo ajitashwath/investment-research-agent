@@ -4,7 +4,16 @@ export const runtime = 'nodejs'
 export const maxDuration = 300
 
 export async function POST(request) {
-  const { company } = await request.json()
+  let company
+  try {
+    const body = await request.json()
+    company = body?.company
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Invalid or missing JSON body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
 
   if (!company || typeof company !== 'string' || company.trim().length < 1) {
     return new Response(JSON.stringify({ error: 'Company name is required' }), {

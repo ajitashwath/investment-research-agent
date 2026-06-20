@@ -23,11 +23,13 @@ export async function newsAgentNode(state, config) {
       days: 60,
     })
 
+    const limitedResults = results.slice(0, 8)
+
     const context = `
 Company: ${company} (${resolvedTicker})
 
 News Articles:
-${results.map((r, i) => `Article ${i + 1}:
+${limitedResults.map((r, i) => `Article ${i + 1}:
 Title: ${r.title}
 URL: ${r.url}
 Published: ${r.publishedDate || 'Recent'}
@@ -42,11 +44,11 @@ Content: ${r.content}`).join('\n\n---\n\n')}
 
     newsData.articles = newsData.articles.map((a, i) => ({
       ...a,
-      url: a.url || results[i]?.url || '#',
-      source: a.source || (() => { try { return new URL(results[i]?.url || '').hostname.replace('www.', '') } catch { return 'Unknown' } })(),
+      url: a.url || limitedResults[i]?.url || '#',
+      source: a.source || (() => { try { return new URL(limitedResults[i]?.url || '').hostname.replace('www.', '') } catch { return 'Unknown' } })(),
     }))
 
-    const sources = results.slice(0, 6).map(r => ({
+    const sources = limitedResults.slice(0, 6).map(r => ({
       title: r.title,
       url: r.url,
       source: (() => { try { return new URL(r.url).hostname.replace('www.', '') } catch { return 'Unknown' } })(),

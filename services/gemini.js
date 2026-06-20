@@ -2,7 +2,7 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 
 export function getGeminiFlash() {
   return new ChatGoogleGenerativeAI({
-    model: 'gemini-2.5-flash-preview-05-20',
+    model: 'gemini-2.5-flash-lite',
     apiKey: process.env.GEMINI_API_KEY,
     temperature: 0.3,
     maxOutputTokens: 8192,
@@ -11,10 +11,10 @@ export function getGeminiFlash() {
 
 export function getGeminiPro() {
   return new ChatGoogleGenerativeAI({
-    model: 'gemini-2.5-pro-preview-06-05',
+    model: 'gemini-2.5-flash-lite',
     apiKey: process.env.GEMINI_API_KEY,
     temperature: 0.2,
-    maxOutputTokens: 16384,
+    maxOutputTokens: 8192,
   })
 }
 

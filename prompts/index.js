@@ -67,7 +67,7 @@ Return ONLY valid JSON:
 }
 
 Sentiment score: 0-100 (0=very negative, 50=neutral, 100=very positive)
-Include all articles from the search results. If date is unknown, estimate.`
+Include the top 5-6 most significant and distinct articles from the search results. Do not exceed 6 articles. If date is unknown, estimate.`
 
 export const RISK_ANALYSIS_PROMPT = `You are a risk analyst at a hedge fund. Identify and assess all material risks facing this company from an investment perspective.
 
@@ -168,3 +168,55 @@ Confidence: 0-100 (your conviction level)
 Scores: 0-100 each. Risk score = inverse of risk (100 = low risk = good)
 Valuation score is intentionally harder to get above 80 without compelling cheapness
 Be decisive. Institutional investors need clear direction.`
+
+export const FINANCIALS_EXTRACTION_PROMPT = `You are a professional financial analyst. Your task is to extract financial data for a company from raw search results and structure it into a specific JSON format.
+
+Find and estimate the latest values (preferring FY 2024/2025/TTM values). Convert formatted values to raw numbers (e.g. $12.5B to 12500000000, 15.4% to 15.4).
+For historical "revenueData", provide the last 3-4 years (e.g., 2021, 2022, 2023, 2024).
+
+Return ONLY valid JSON in this format:
+{
+  "revenueData": [
+    { "year": 2024, "revenue": 96773000000, "netIncome": 13000000000, "grossProfit": 25000000000, "operatingIncome": 15000000000, "eps": 3.12 }
+  ],
+  "revenueGrowth": 18.5,
+  "grossMargin": 25.6,
+  "netMargin": 10.2,
+  "debtToEquity": 12.5,
+  "freeCashFlow": 6701000000,
+  "operatingCashFlow": 11400000000,
+  "returnOnEquity": 21.3,
+  "returnOnAssets": 12.1,
+  "currentRatio": 1.7,
+  "quickRatio": 1.2,
+  "trailingPE": 35.4,
+  "forwardPE": 28.2,
+  "priceToBook": 8.5,
+  "priceToSales": 5.1,
+  "beta": 1.4,
+  "totalCash": 22000000000,
+  "totalDebt": 5000000000,
+  "totalRevenue": 96773000000,
+  "grossProfit": 25000000000,
+  "netIncome": 13000000000,
+  "ebitda": 15000000000,
+  "sector": "Sector Name",
+  "industry": "Industry Name",
+  "fullTimeEmployees": 100000,
+  "website": "https://company.com",
+  "longBusinessSummary": "Business summary.",
+  "quote": {
+    "symbol": "TICKER",
+    "longName": "Full Company Name",
+    "regularMarketPrice": 123.45,
+    "regularMarketChange": 1.2,
+    "regularMarketChangePercent": 0.98,
+    "marketCap": 15000000000,
+    "fiftyTwoWeekHigh": 150.0,
+    "fiftyTwoWeekLow": 90.0,
+    "currency": "USD",
+    "exchange": "NASDAQ"
+  }
+}
+
+Use null for any field that is completely unavailable.`

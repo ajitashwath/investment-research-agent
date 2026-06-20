@@ -1,6 +1,7 @@
-import { getFinancials } from '../../services/yahooFinance.js'
+import { getFinancials, getQuote } from '../../services/yahooFinance.js'
 import { getGeminiFlash, callGemini, extractJSON } from '../../services/gemini.js'
-import { FINANCIAL_HEALTH_PROMPT } from '../../prompts/index.js'
+import { FINANCIAL_HEALTH_PROMPT, FINANCIALS_EXTRACTION_PROMPT } from '../../prompts/index.js'
+import { tavilySearchMultiple } from '../../services/tavily.js'
 
 function fmt(num) {
   if (num == null) return 'N/A'
@@ -20,8 +21,61 @@ export async function financialsAgentNode(state, config) {
     const resolvedTicker = ticker || companyData?.ticker
     if (!resolvedTicker) throw new Error('No ticker available for financial analysis')
 
-    const financials = await getFinancials(resolvedTicker)
-    if (!financials) throw new Error(`Could not fetch financials for ${resolvedTicker}`)
+    let financials = await getFinancials(resolvedTicker)
+    if (!financials) {
+      onProgress?.({ agent: 'financials', status: 'running', message: 'Yahoo API blocked. Searching web for financials...' })
+      
+      const quote = await getQuote(resolvedTicker)
+      const queries = [
+        `${company} ${resolvedTicker} key financial metrics statistics 2024 2025 revenue net income balance sheet valuation PE ratio`,
+        `${company} ${resolvedTicker} income statement balance sheet cash flow statement annual quarterly 2023 2024`
+      ]
+      
+      const { results } = await tavilySearchMultiple(queries, { maxResults: 5 })
+      const fallbackContext = `
+Company: ${company}
+Ticker: ${resolvedTicker}
+Web Search Financial Data:
+${results.map(r => `Title: ${r.title}\nContent: ${r.content}`).join('\n\n---\n\n')}
+`
+      const llm = getGeminiFlash()
+      const rawExtracted = await callGemini(llm, FINANCIALS_EXTRACTION_PROMPT, fallbackContext)
+      financials = extractJSON(rawExtracted)
+      
+      if (!Array.isArray(financials.revenueData)) {
+        financials.revenueData = []
+      }
+      
+      if (quote) {
+        financials.quote = {
+          symbol: quote.symbol || resolvedTicker,
+          longName: quote.longName || company,
+          regularMarketPrice: quote.regularMarketPrice,
+          regularMarketChange: quote.regularMarketChange,
+          regularMarketChangePercent: quote.regularMarketChangePercent,
+          marketCap: financials.quote?.marketCap ?? null,
+          fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
+          fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
+          currency: quote.currency || 'USD',
+          exchange: quote.exchange || 'NASDAQ',
+        }
+      } else {
+        if (!financials.quote) {
+          financials.quote = {
+            symbol: resolvedTicker,
+            longName: company,
+            regularMarketPrice: null,
+            regularMarketChange: null,
+            regularMarketChangePercent: null,
+            marketCap: null,
+            fiftyTwoWeekHigh: null,
+            fiftyTwoWeekLow: null,
+            currency: 'USD',
+            exchange: 'NASDAQ',
+          }
+        }
+      }
+    }
 
     const financialContext = `
 Company: ${company}
