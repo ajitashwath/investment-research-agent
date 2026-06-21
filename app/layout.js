@@ -1,7 +1,7 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'AlphaLens — AI Investment Research',
+  title: 'AI Investment Research',
   description: 'Multi-agent AI investment research powered by LangGraph and Gemini. Get comprehensive financial analysis, risk assessment, and investment decisions in seconds.',
   keywords: 'investment research, AI, LangGraph, stock analysis, financial analysis',
 }

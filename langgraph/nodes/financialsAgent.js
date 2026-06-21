@@ -3,12 +3,22 @@ import { getGeminiFlash, callGemini, extractJSON } from '../../services/gemini.j
 import { FINANCIAL_HEALTH_PROMPT, FINANCIALS_EXTRACTION_PROMPT } from '../../prompts/index.js'
 import { tavilySearchMultiple } from '../../services/tavily.js'
 
-function fmt(num) {
+function fmt(num, currency = 'USD') {
   if (num == null) return 'N/A'
-  if (Math.abs(num) >= 1e12) return `$${(num / 1e12).toFixed(2)}T`
-  if (Math.abs(num) >= 1e9) return `$${(num / 1e9).toFixed(2)}B`
-  if (Math.abs(num) >= 1e6) return `$${(num / 1e6).toFixed(2)}M`
-  return `$${num.toFixed(2)}`
+  const isINR = currency === 'INR' || currency === 'inr';
+  const symbol = isINR ? '₹' : '$';
+  if (isINR) {
+    const abs = Math.abs(num);
+    if (abs >= 1e7) return `${symbol}${(num / 1e7).toFixed(2)} Cr`
+    if (abs >= 1e5) return `${symbol}${(num / 1e5).toFixed(2)} L`
+    return `${symbol}${num.toLocaleString('en-IN')}`
+  } else {
+    const abs = Math.abs(num);
+    if (abs >= 1e12) return `${symbol}${(num / 1e12).toFixed(2)}T`
+    if (abs >= 1e9) return `${symbol}${(num / 1e9).toFixed(2)}B`
+    if (abs >= 1e6) return `${symbol}${(num / 1e6).toFixed(2)}M`
+    return `${symbol}${num.toFixed(2)}`
+  }
 }
 
 export async function financialsAgentNode(state, config) {
@@ -77,28 +87,30 @@ ${results.map(r => `Title: ${r.title}\nContent: ${r.content}`).join('\n\n---\n\n
       }
     }
 
+    const currency = financials.quote?.currency || 'USD'
+
     const financialContext = `
 Company: ${company}
 Ticker: ${resolvedTicker}
 
 INCOME STATEMENT:
-- Total Revenue (TTM): ${fmt(financials.totalRevenue)}
-- Gross Profit: ${fmt(financials.grossProfit)}
-- Net Income: ${fmt(financials.netIncome)}
-- EBITDA: ${fmt(financials.ebitda)}
+- Total Revenue (TTM): ${fmt(financials.totalRevenue, currency)}
+- Gross Profit: ${fmt(financials.grossProfit, currency)}
+- Net Income: ${fmt(financials.netIncome, currency)}
+- EBITDA: ${fmt(financials.ebitda, currency)}
 - Revenue Growth YoY: ${financials.revenueGrowth != null ? financials.revenueGrowth.toFixed(1) + '%' : 'N/A'}
 - Gross Margin: ${financials.grossMargin != null ? financials.grossMargin.toFixed(1) + '%' : 'N/A'}
 - Net Margin: ${financials.netMargin != null ? financials.netMargin.toFixed(1) + '%' : 'N/A'}
 
 BALANCE SHEET:
-- Total Cash: ${fmt(financials.totalCash)}
-- Total Debt: ${fmt(financials.totalDebt)}
+- Total Cash: ${fmt(financials.totalCash, currency)}
+- Total Debt: ${fmt(financials.totalDebt, currency)}
 - Debt-to-Equity: ${financials.debtToEquity != null ? financials.debtToEquity.toFixed(2) : 'N/A'}
 - Current Ratio: ${financials.currentRatio != null ? financials.currentRatio.toFixed(2) : 'N/A'}
 
 CASH FLOW:
-- Free Cash Flow: ${fmt(financials.freeCashFlow)}
-- Operating Cash Flow: ${fmt(financials.operatingCashFlow)}
+- Free Cash Flow: ${fmt(financials.freeCashFlow, currency)}
+- Operating Cash Flow: ${fmt(financials.operatingCashFlow, currency)}
 
 VALUATION:
 - P/E Ratio (Trailing): ${financials.trailingPE != null ? financials.trailingPE.toFixed(1) : 'N/A'}
@@ -111,7 +123,7 @@ RETURNS:
 - Return on Assets: ${financials.returnOnAssets != null ? financials.returnOnAssets.toFixed(1) + '%' : 'N/A'}
 
 HISTORICAL:
-${financials.revenueData.map(d => `${d.year}: Revenue=${fmt(d.revenue)}, Net Income=${fmt(d.netIncome)}, Gross=${fmt(d.grossProfit)}, EPS=${d.eps != null ? '$' + d.eps.toFixed(2) : 'N/A'}`).join('\n')}
+${financials.revenueData.map(d => `${d.year}: Revenue=${fmt(d.revenue, currency)}, Net Income=${fmt(d.netIncome, currency)}, Gross=${fmt(d.grossProfit, currency)}, EPS=${d.eps != null ? (currency === 'INR' ? '₹' : '$') + d.eps.toFixed(2) : 'N/A'}`).join('\n')}
 `
 
     const llm = getGeminiFlash()

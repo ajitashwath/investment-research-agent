@@ -1,19 +1,30 @@
 import { runInvestmentAnalysis } from '../../../langgraph/graph.js'
+import { setCustomKeys } from '../../../services/keys.js'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
 export async function POST(request) {
   let company
+  let geminiKey
+  let tavilyKey
+  let model
+  let depth
   try {
     const body = await request.json()
     company = body?.company
+    geminiKey = body?.geminiKey
+    tavilyKey = body?.tavilyKey
+    model = body?.model
+    depth = body?.depth
   } catch (err) {
     return new Response(JSON.stringify({ error: 'Invalid or missing JSON body' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     })
   }
+
+  setCustomKeys(geminiKey, tavilyKey, depth)
 
   if (!company || typeof company !== 'string' || company.trim().length < 1) {
     return new Response(JSON.stringify({ error: 'Company name is required' }), {
@@ -56,7 +67,7 @@ export async function POST(request) {
       }
 
       try {
-        const result = await runInvestmentAnalysis(company.trim(), onProgress)
+        const result = await runInvestmentAnalysis(company.trim(), onProgress, { model, depth })
 
         send({
           type: 'result',

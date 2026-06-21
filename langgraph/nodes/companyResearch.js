@@ -26,12 +26,21 @@ export async function companyResearchNode(state, config) {
     const { results, answer } = await tavilySearchMultiple(queries, { maxResults: 5 })
 
     const quote = ticker ? await getQuote(ticker) : null
+    const currency = quote?.currency || 'USD'
+    const isINR = currency === 'INR' || currency === 'inr'
+    const symbol = isINR ? '₹' : '$'
+    const marketCapFormatted = quote?.marketCap
+      ? (isINR ? `${symbol}${(quote.marketCap / 1e7).toFixed(2)} Cr` : `${symbol}${(quote.marketCap / 1e9).toFixed(1)}B`)
+      : 'N/A'
+    const currentPriceFormatted = quote?.regularMarketPrice
+      ? `${symbol}${quote.regularMarketPrice.toFixed(2)} ${quote.currency || ''}`
+      : 'N/A'
 
     const context = `
 Company: ${company}
 Ticker: ${ticker || 'Unknown'}
-Current Price: ${quote?.regularMarketPrice ? `$${quote.regularMarketPrice.toFixed(2)} ${quote.currency || ''}` : 'N/A'}
-Market Cap: ${quote?.marketCap ? `$${(quote.marketCap / 1e9).toFixed(1)}B` : 'N/A'}
+Current Price: ${currentPriceFormatted}
+Market Cap: ${marketCapFormatted}
 
 Web Research Summary:
 ${answer}

@@ -160,7 +160,7 @@ Return ONLY valid JSON:
     "bearCase": ["Specific bear point 1", "Bear point 2"]
   },
   "timeHorizon": "12-18 months",
-  "targetPriceRange": "$X - $Y (if estimable)"
+  "targetPriceRange": "CurrencySymbol X - CurrencySymbol Y (use appropriate currency symbol e.g. ₹ or $)"
 }
 
 Recommendation options: STRONG BUY, BUY, HOLD, SELL, STRONG SELL
@@ -171,7 +171,7 @@ Be decisive. Institutional investors need clear direction.`
 
 export const FINANCIALS_EXTRACTION_PROMPT = `You are a professional financial analyst. Your task is to extract financial data for a company from raw search results and structure it into a specific JSON format.
 
-Find and estimate the latest values (preferring FY 2024/2025/TTM values). Convert formatted values to raw numbers (e.g. $12.5B to 12500000000, 15.4% to 15.4).
+Find and estimate the latest values (preferring FY 2024/2025/TTM values). Convert formatted values to raw numbers (e.g. $12.5B to 12500000000, 15.4% to 15.4). For Indian markets, convert values like ₹5,000 Crore to 50000000000, or ₹50 Lakh to 5000000.
 For historical "revenueData", provide the last 3-4 years (e.g., 2021, 2022, 2023, 2024).
 
 Return ONLY valid JSON in this format:

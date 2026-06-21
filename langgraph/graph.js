@@ -40,33 +40,40 @@ async function parallelResearchNode(state, config) {
   const updates = {}
   const errors = []
 
-  if (financialResult.status === 'fulfilled' && financialResult.value.financialData) {
-    updates.financialData = financialResult.value.financialData
+  if (financialResult.status === 'fulfilled') {
+    if (financialResult.value.financialData) updates.financialData = financialResult.value.financialData
+    if (financialResult.value.errors) errors.push(...financialResult.value.errors)
   } else if (financialResult.status === 'rejected') {
     errors.push(`Financials: ${financialResult.reason?.message}`)
   }
 
-  if (newsResult.status === 'fulfilled' && newsResult.value.newsData) {
-    updates.newsData = newsResult.value.newsData
-    updates.sources = newsResult.value.sources || []
+  if (newsResult.status === 'fulfilled') {
+    if (newsResult.value.newsData) {
+      updates.newsData = newsResult.value.newsData
+      updates.sources = newsResult.value.sources || []
+    }
+    if (newsResult.value.errors) errors.push(...newsResult.value.errors)
   } else if (newsResult.status === 'rejected') {
     errors.push(`News: ${newsResult.reason?.message}`)
   }
 
-  if (riskResult.status === 'fulfilled' && riskResult.value.riskData) {
-    updates.riskData = riskResult.value.riskData
+  if (riskResult.status === 'fulfilled') {
+    if (riskResult.value.riskData) updates.riskData = riskResult.value.riskData
+    if (riskResult.value.errors) errors.push(...riskResult.value.errors)
   } else if (riskResult.status === 'rejected') {
     errors.push(`Risk: ${riskResult.reason?.message}`)
   }
 
-  if (competitorResult.status === 'fulfilled' && competitorResult.value.competitorData) {
-    updates.competitorData = competitorResult.value.competitorData
+  if (competitorResult.status === 'fulfilled') {
+    if (competitorResult.value.competitorData) updates.competitorData = competitorResult.value.competitorData
+    if (competitorResult.value.errors) errors.push(...competitorResult.value.errors)
   } else if (competitorResult.status === 'rejected') {
     errors.push(`Competitors: ${competitorResult.reason?.message}`)
   }
 
-  if (growthResult.status === 'fulfilled' && growthResult.value.growthData) {
-    updates.growthData = growthResult.value.growthData
+  if (growthResult.status === 'fulfilled') {
+    if (growthResult.value.growthData) updates.growthData = growthResult.value.growthData
+    if (growthResult.value.errors) errors.push(...growthResult.value.errors)
   } else if (growthResult.status === 'rejected') {
     errors.push(`Growth: ${growthResult.reason?.message}`)
   }
@@ -93,11 +100,11 @@ export function buildInvestmentGraph() {
   return graph.compile()
 }
 
-export async function runInvestmentAnalysis(company, onProgress) {
+export async function runInvestmentAnalysis(company, onProgress, options = {}) {
   const graph = buildInvestmentGraph()
   const result = await graph.invoke(
     { company, sources: [], errors: [] },
-    { configurable: { onProgress }, recursionLimit: 50 }
+    { configurable: { onProgress, ...options }, recursionLimit: 50 }
   )
   return result
 }

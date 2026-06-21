@@ -7,11 +7,20 @@ let _session = null
 async function getSession() {
   if (_session && Date.now() - _session.ts < 1000 * 60 * 30) return _session
 
-  const crumbRes = await fetch(`${BASE}/v1/test/getcrumb`, {
+  // Fetch session cookie from fc.yahoo.com first
+  const fcRes = await fetch('https://fc.yahoo.com', {
     headers: { 'User-Agent': UA }
   })
+  const rawCookies = fcRes.headers.get('set-cookie') || ''
+
+  // Request crumb with the session cookie
+  const crumbRes = await fetch(`${BASE}/v1/test/getcrumb`, {
+    headers: { 
+      'User-Agent': UA,
+      'Cookie': rawCookies
+    }
+  })
   const crumb = await crumbRes.text()
-  const rawCookies = crumbRes.headers.get('set-cookie') || ''
 
   _session = { crumb: crumb.trim(), cookie: rawCookies, ts: Date.now() }
   return _session
@@ -40,18 +49,31 @@ export async function searchTicker(companyName) {
     const url = `${BASE1}/v1/finance/search?q=${encodeURIComponent(companyName)}&quotesCount=10&newsCount=0&listsCount=0`
     const data = await yfFetch(url)
 
-    const RANK = { NMS: 0, NYQ: 0, NYS: 0, NGM: 1, NAS: 1 }
+    const RANK = { NSI: 0, BSE: 0, NSE: 0, Bombay: 0, NMS: 1, NYQ: 1, NYS: 1, NGM: 2, NAS: 2 }
 
     let quotes = (data.quotes || []).filter(q =>
       q.quoteType === 'EQUITY' &&
-      (q.exchDisp === 'NASDAQ' || q.exchDisp === 'NYSE' || q.exchange === 'NMS' || q.exchange === 'NYQ' || q.exchange === 'NGM')
+      (
+        q.exchDisp === 'NSE' ||
+        q.exchDisp === 'BSE' ||
+        q.exchDisp === 'Bombay' ||
+        q.exchange === 'NSI' ||
+        q.exchange === 'BSE' ||
+        q.symbol?.endsWith('.NS') ||
+        q.symbol?.endsWith('.BO') ||
+        q.exchDisp === 'NASDAQ' ||
+        q.exchDisp === 'NYSE' ||
+        q.exchange === 'NMS' ||
+        q.exchange === 'NYQ' ||
+        q.exchange === 'NGM'
+      )
     )
 
     if (quotes.length === 0) {
       quotes = (data.quotes || []).filter(q => q.quoteType === 'EQUITY')
     }
 
-    quotes.sort((a, b) => (RANK[a.exchange] ?? 2) - (RANK[b.exchange] ?? 2))
+    quotes.sort((a, b) => (RANK[a.exchange] ?? RANK[a.exchDisp] ?? 3) - (RANK[b.exchange] ?? RANK[b.exchDisp] ?? 3))
 
     const upper = companyName.toUpperCase().trim()
     const exact = quotes.find(q => q.symbol === upper)

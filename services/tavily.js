@@ -1,16 +1,22 @@
+import { getTavilyKey, getSearchDepth } from './keys.js'
+
 const TAVILY_API_URL = 'https://api.tavily.com/search'
 
 export async function tavilySearch(query, options = {}) {
+  const currentDepth = getSearchDepth()
+  const defaultDepth = currentDepth === 'basic' ? 'basic' : 'advanced'
+  const defaultDays = currentDepth === 'basic' ? 30 : 60
+
   const {
     maxResults = 5,
-    searchDepth = 'advanced',
+    searchDepth = options.searchDepth || defaultDepth,
     includeAnswer = true,
     includeRawContent = false,
-    days = 30,
+    days = options.days || defaultDays,
   } = options
 
   const body = {
-    api_key: process.env.TAVILY_API_KEY,
+    api_key: getTavilyKey(),
     query,
     max_results: maxResults,
     search_depth: searchDepth,
