@@ -58,7 +58,7 @@ export default function AuthOverlay({ onAuthSuccess }) {
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
       background: 'var(--bg)',
-      backgroundImage: 'radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.05) 0%, transparent 60%)',
+      backgroundImage: 'radial-gradient(circle at 50% -20%, var(--accent-light) 0%, transparent 60%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -77,7 +77,7 @@ export default function AuthOverlay({ onAuthSuccess }) {
           backdropFilter: 'blur(30px)',
           borderRadius: 24,
           border: '1px solid var(--border-light)',
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.7)',
+          boxShadow: 'var(--shadow-card-hover, rgba(0, 0, 0, 0.1) 0px 12px 32px)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -104,7 +104,7 @@ export default function AuthOverlay({ onAuthSuccess }) {
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          background: 'rgba(255, 255, 255, 0.02)',
+          background: 'var(--bg-sidebar)',
           border: '1px solid var(--border)',
           borderRadius: 8,
           padding: '8px 12px',
@@ -113,7 +113,7 @@ export default function AuthOverlay({ onAuthSuccess }) {
           marginBottom: 24,
           fontFamily: 'JetBrains Mono'
         }}>
-          {isCloud ? <Cloud size={14} /> : <Database size={14} />}
+          {isCloud ? <Globe size={14} /> : <TrendingUp size={14} />}
           <span>
             {isCloud ? 'Supabase cloud storage active' : 'Local demo sandbox active'}
           </span>
@@ -128,14 +128,14 @@ export default function AuthOverlay({ onAuthSuccess }) {
               exit={{ opacity: 0, height: 0 }}
               style={{
                 width: '100%',
-                background: 'rgba(229, 57, 53, 0.1)',
-                border: '1px solid rgba(229, 57, 53, 0.2)',
+                background: 'var(--red-bg)',
+                border: '1px solid var(--red-border)',
                 borderRadius: 8,
                 padding: '10px 12px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                color: '#ef4444',
+                color: 'var(--red)',
                 fontSize: 12,
                 marginBottom: 16
               }}
@@ -152,14 +152,14 @@ export default function AuthOverlay({ onAuthSuccess }) {
               exit={{ opacity: 0, height: 0 }}
               style={{
                 width: '100%',
-                background: 'rgba(0, 169, 110, 0.1)',
-                border: '1px solid rgba(0, 169, 110, 0.2)',
+                background: 'var(--green-bg)',
+                border: '1px solid var(--green-border)',
                 borderRadius: 8,
                 padding: '10px 12px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                color: '#10b981',
+                color: 'var(--green)',
                 fontSize: 12,
                 marginBottom: 16
               }}
@@ -173,12 +173,12 @@ export default function AuthOverlay({ onAuthSuccess }) {
         {/* Auth Tabs */}
         <div style={{
           display: 'flex',
-          background: 'rgba(255, 255, 255, 0.02)',
+          background: 'var(--bg-sidebar)',
           padding: 3,
           borderRadius: 99,
           width: '100%',
           marginBottom: 24,
-          border: '1px solid rgba(255,255,255,0.015)'
+          border: '1px solid var(--border)'
         }}>
           <button
             type="button"
@@ -187,8 +187,9 @@ export default function AuthOverlay({ onAuthSuccess }) {
               flex: 1,
               padding: '8px 16px',
               border: 'none',
-              background: !isSignUp ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
-              color: !isSignUp ? '#ffffff' : 'rgba(255, 255, 255, 0.45)',
+              background: !isSignUp ? 'var(--bg-card)' : 'transparent',
+              color: !isSignUp ? 'var(--text-primary)' : 'var(--text-muted)',
+              boxShadow: !isSignUp ? 'var(--shadow-sm)' : 'none',
               borderRadius: 99,
               fontSize: 12,
               fontWeight: 500,
@@ -205,8 +206,9 @@ export default function AuthOverlay({ onAuthSuccess }) {
               flex: 1,
               padding: '8px 16px',
               border: 'none',
-              background: isSignUp ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
-              color: isSignUp ? '#ffffff' : 'rgba(255, 255, 255, 0.45)',
+              background: isSignUp ? 'var(--bg-card)' : 'transparent',
+              color: isSignUp ? 'var(--text-primary)' : 'var(--text-muted)',
+              boxShadow: isSignUp ? 'var(--shadow-sm)' : 'none',
               borderRadius: 99,
               fontSize: 12,
               fontWeight: 500,
@@ -229,16 +231,16 @@ export default function AuthOverlay({ onAuthSuccess }) {
                 onChange={e => setFullName(e.target.value)}
                 style={{
                   padding: '12px 16px',
-                  background: 'rgba(255, 255, 255, 0.015)',
-                  border: '1px solid rgba(255, 255, 255, 0.015)',
+                  background: 'var(--bg-sidebar)',
+                  border: '1px solid var(--border)',
                   borderRadius: 12,
-                  color: '#ffffff',
+                  color: 'var(--text-primary)',
                   fontSize: 13,
                   outline: 'none',
                   transition: 'all 0.2s'
                 }}
-                onFocus={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.015)'}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border)'}
               />
             </div>
           )}
@@ -252,16 +254,16 @@ export default function AuthOverlay({ onAuthSuccess }) {
               onChange={e => setEmail(e.target.value)}
               style={{
                 padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.015)',
-                border: '1px solid rgba(255, 255, 255, 0.015)',
+                background: 'var(--bg-sidebar)',
+                border: '1px solid var(--border)',
                 borderRadius: 12,
-                color: '#ffffff',
+                color: 'var(--text-primary)',
                 fontSize: 13,
                 outline: 'none',
                 transition: 'all 0.2s'
               }}
-              onFocus={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.015)'}
+              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border)'}
             />
           </div>
 
@@ -274,16 +276,16 @@ export default function AuthOverlay({ onAuthSuccess }) {
               onChange={e => setPassword(e.target.value)}
               style={{
                 padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.015)',
-                border: '1px solid rgba(255, 255, 255, 0.015)',
+                background: 'var(--bg-sidebar)',
+                border: '1px solid var(--border)',
                 borderRadius: 12,
-                color: '#ffffff',
+                color: 'var(--text-primary)',
                 fontSize: 13,
                 outline: 'none',
                 transition: 'all 0.2s'
               }}
-              onFocus={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.015)'}
+              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border)'}
             />
           </div>
 
@@ -292,9 +294,9 @@ export default function AuthOverlay({ onAuthSuccess }) {
             disabled={loading}
             style={{
               padding: '12px 20px',
-              background: '#ffffff',
-              color: 'var(--bg)',
-              border: 'none',
+              background: 'var(--btn-primary-bg, var(--text-primary))',
+              color: 'var(--btn-primary-text, var(--bg))',
+              border: 'var(--btn-primary-border, none)',
               borderRadius: 99,
               fontSize: 13,
               fontWeight: 500,
@@ -303,14 +305,22 @@ export default function AuthOverlay({ onAuthSuccess }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 8px 24px rgba(255,255,255,0.05)',
+              boxShadow: 'var(--btn-primary-shadow, none)',
               marginTop: 14
             }}
-            onMouseEnter={e => { e.target.style.background = 'rgba(255, 255, 255, 0.9)'; e.target.style.transform = 'scale(1.02)' }}
-            onMouseLeave={e => { e.target.style.background = '#ffffff'; e.target.style.transform = 'none' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'var(--btn-primary-hover-bg, rgba(255,255,255,0.9))'
+              e.currentTarget.style.borderColor = 'var(--btn-primary-hover-border, currentColor)'
+              e.currentTarget.style.transform = 'scale(1.02)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'var(--btn-primary-bg, var(--text-primary))'
+              e.currentTarget.style.borderColor = 'var(--btn-primary-border, none)'
+              e.currentTarget.style.transform = 'none'
+            }}
           >
             {loading ? (
-              <div className="spinner" style={{ borderTopColor: 'var(--bg)' }} />
+              <div className="spinner" style={{ borderTopColor: 'currentColor' }} />
             ) : (
               <span>{isSignUp ? 'Create Analyst Profile' : 'Authenticate'}</span>
             )}
@@ -318,8 +328,8 @@ export default function AuthOverlay({ onAuthSuccess }) {
         </form>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 32 }}>
-          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.05em' }}>FOR INTERNAL USE ONLY.</span>
-          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>·</span>
+          <span style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>FOR INTERNAL USE ONLY.</span>
+          <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>·</span>
           <button 
             type="button" 
             onClick={() => {
@@ -328,7 +338,7 @@ export default function AuthOverlay({ onAuthSuccess }) {
               localStorage.setItem('alpha_local_session', JSON.stringify(demoUser))
               onAuthSuccess?.(demoUser)
             }}
-            style={{ background: 'none', border: 'none', padding: 0, color: 'rgba(255, 255, 255, 0.45)', fontSize: 9, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline' }}
+            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--text-secondary)', fontSize: 9, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline' }}
           >
             BYPASS TO DEMO
           </button>

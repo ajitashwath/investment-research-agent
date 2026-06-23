@@ -99,54 +99,115 @@ function FactorGrade({ label, grade, trend, color }) {
   )
 }
 
-function AnalysisMatrix({ agentStatuses, isLoading }) {
+function HorizontalAnalysisStepper({ agentStatuses, isLoading }) {
   const steps = [
-    { key: 'company', label: 'Index macro & industry disclosures' },
-    { key: 'financials', label: 'Parse quarterly financial filings' },
-    { key: 'news', label: 'Extract financial news sentiment signals' },
-    { key: 'risk', label: 'Model operational & regulatory exposure' },
-    { key: 'competitors', label: 'Index competitor market shares' },
-    { key: 'growth', label: 'Estimate intrinsic growth model' },
-    { key: 'decision', label: 'Synthesize evidence & trade recommendation' }
+    { key: 'company', label: 'Macro Scan', desc: 'Industry Disclosures' },
+    { key: 'financials', label: 'Financials', desc: 'Quarterly Filings' },
+    { key: 'news', label: 'Sentiment', desc: 'News Signals' },
+    { key: 'risk', label: 'Risk Model', desc: 'Exposure Audit' },
+    { key: 'competitors', label: 'Competitors', desc: 'Market Share' },
+    { key: 'growth', label: 'Growth Engine', desc: 'Intrinsic Value' },
+    { key: 'decision', label: 'AI Synthesis', desc: 'Trade Verdict' }
   ]
 
   return (
-    <div className="card" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div className="label">Analysis Execution</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {steps.map(({ key, label }) => {
+    <div className="card" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span className="label" style={{ fontSize: 10, letterSpacing: '0.08em' }}>Agent Research Pipeline</span>
+        <div style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {isLoading ? (
+            <>
+              <div className="spinner" style={{ width: 10, height: 10, borderTopColor: 'var(--accent)' }} />
+              <span style={{ color: 'var(--text-secondary)' }}>Agents actively analyzing market disclosures...</span>
+            </>
+          ) : (
+            <span style={{ color: 'var(--green)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>✓</span> Synthesis complete
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'relative', marginTop: 10, padding: '0 8px', gap: 8 }}>
+        {/* Pipeline connecting line background */}
+        <div style={{ position: 'absolute', top: 14, left: '6%', right: '6%', height: 2, background: 'var(--border-light)', zIndex: 1 }} />
+        
+        {steps.map(({ key, label, desc }, index) => {
           const status = agentStatuses[key] || 'waiting'
           const isDone = status === 'done'
           const isRunning = status === 'running'
           const isError = status === 'error'
           
-          let icon = '○'
           let color = 'var(--text-muted)'
-          let statusText = 'Queued'
+          let textWeight = 400
+          let border = '2px solid var(--border)'
+          let dotBg = 'var(--bg-card)'
+          let pulseClass = {}
           
           if (isDone) {
-            icon = '✓'
             color = 'var(--green)'
-            statusText = 'Completed'
+            border = '2px solid var(--green)'
+            dotBg = 'var(--bg-card)'
+            textWeight = 500
           } else if (isRunning) {
-            icon = '●'
-            color = 'var(--purple)'
-            statusText = 'Running'
+            color = 'var(--accent)'
+            border = '2px solid var(--accent)'
+            dotBg = 'var(--bg-card)'
+            textWeight = 500
           } else if (isError) {
-            icon = '⚠'
             color = 'var(--red)'
-            statusText = 'Failed'
+            border = '2px solid var(--red)'
+            dotBg = 'var(--bg-card)'
           }
-          
+
           return (
-            <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-                <span style={{ color: color, fontSize: 12, width: 14, display: 'inline-block', textAlign: 'center' }}>{icon}</span>
-                <span style={{ fontSize: 11.5, color: isDone || isRunning ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                  {label}
-                </span>
+            <div key={key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, zIndex: 2, position: 'relative', minWidth: 64 }}>
+              {/* Stepper Dot */}
+              <div style={{ position: 'relative', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {isRunning && (
+                  <motion.div
+                    style={{
+                      position: 'absolute',
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      border: '2px solid var(--accent)',
+                      zIndex: 0
+                    }}
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                )}
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: dotBg,
+                  border: border,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: isDone ? 'var(--green)' : isRunning ? 'var(--accent)' : 'var(--text-muted)',
+                  transition: 'all 0.3s ease',
+                  boxShadow: isRunning ? '0 0 12px var(--accent-light)' : 'none',
+                  position: 'relative',
+                  zIndex: 1
+                }}>
+                  {isDone ? '✓' : isRunning ? <div className="spinner" style={{ width: 10, height: 10, borderTopColor: 'var(--accent)', borderWidth: 1.5 }} /> : index + 1}
+                </div>
               </div>
-              <span style={{ fontSize: 10, color: color }}>{statusText}</span>
+
+              {/* Step Title */}
+              <div style={{ fontSize: 11, fontWeight: textWeight, color: isDone || isRunning ? 'var(--text-primary)' : 'var(--text-secondary)', marginTop: 8, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                {label}
+              </div>
+
+              {/* Step Subtitle */}
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                {desc}
+              </div>
             </div>
           )
         })}
@@ -175,7 +236,7 @@ const CustomTooltip = ({ active, payload, label, currency = 'USD' }) => {
   )
 }
 
-function FactorTable({ scores, isLoading }) {
+function FactorTable({ scores, isLoading, onReviewFactor }) {
   if (isLoading) {
     return (
       <div className="card" style={{ padding: '24px 28px', marginBottom: 24 }}>
@@ -247,7 +308,7 @@ function FactorTable({ scores, isLoading }) {
 
   return (
     <div className="card" style={{ padding: '0px 0px', overflow: 'hidden', marginBottom: 24 }}>
-      <div style={{ padding: '20px 24px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ padding: '20px 24px 10px', borderBottom: '1px solid var(--border)' }}>
         <span className="label">Core Investment Factors</span>
       </div>
       <div style={{ overflowX: 'auto' }}>
@@ -294,7 +355,7 @@ function FactorTable({ scores, isLoading }) {
                   <td style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>{f.driver}</td>
                   <td style={{ fontWeight: 500 }}>{f.weight}</td>
                   <td style={{ textAlign: 'right', paddingRight: 24 }}>
-                    <button className="premium-table-btn">Review</button>
+                    <button onClick={() => onReviewFactor(f.id)} className="premium-table-btn">Review</button>
                   </td>
                 </tr>
               )
@@ -351,29 +412,24 @@ function RightSidebar({ result, isLoading }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
             <span style={{ fontSize: 11, color: 'var(--text-primary)', fontWeight: 500 }}>{decision?.confidence || 76}% Confidence</span>
-            <div style={{ flex: 1, height: 4, borderRadius: 99, background: 'rgba(255, 255, 255, 0.05)', overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: 4, borderRadius: 99, background: 'var(--bg-tag)', overflow: 'hidden' }}>
               <div style={{ width: `${decision?.confidence || 76}%`, height: '100%', borderRadius: 99, background: recColor }} />
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, borderTop: '1px solid rgba(255, 255, 255, 0.05)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', padding: '12px 0' }}>
-          <div>
-            <div className="label" style={{ fontSize: 9 }}>Expected Return</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: rawReturn >= 0 ? 'var(--green)' : 'var(--red)' }}>{expectedReturn}</div>
-          </div>
-          <div>
-            <div className="label" style={{ fontSize: 9 }}>Target Price</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{targetPrice}</div>
-          </div>
-          <div>
-            <div className="label" style={{ fontSize: 9 }}>Risk Rating</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: riskVal === 'low' ? 'var(--green)' : riskVal === 'medium' ? 'var(--amber)' : 'var(--red)', textTransform: 'capitalize' }}>{riskVal}</div>
-          </div>
-          <div>
-            <div className="label" style={{ fontSize: 9 }}>Horizon</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{horizon}</div>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '12px 0' }}>
+          {[
+            { label: 'Expected Return', value: expectedReturn, color: rawReturn >= 0 ? 'var(--green)' : 'var(--red)' },
+            { label: 'Target Price', value: targetPrice, color: 'var(--text-primary)' },
+            { label: 'Risk Rating', value: riskVal, color: riskVal === 'low' ? 'var(--green)' : riskVal === 'medium' ? 'var(--amber)' : 'var(--red)' },
+            { label: 'Horizon', value: horizon, color: 'var(--text-primary)' }
+          ].map(item => (
+            <div key={item.label} style={{ padding: '10px 12px', background: 'var(--bg-sidebar)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
+              <div className="label" style={{ fontSize: 9, marginBottom: 2 }}>{item.label}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: item.color, textTransform: 'capitalize' }}>{item.value}</div>
+            </div>
+          ))}
         </div>
 
         <div>
@@ -394,9 +450,9 @@ function RightSidebar({ result, isLoading }) {
       </div>
 
       {/* 2. AI-Powered Risk Control Card */}
-      <div className="card" style={{ padding: '20px 20px', display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(255, 200, 87, 0.01)', border: '1px solid rgba(255, 200, 87, 0.08)' }}>
+      <div className="card" style={{ padding: '20px 20px', display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--amber-bg)', border: '1px solid var(--amber-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 24, height: 24, borderRadius: 8, background: 'rgba(255, 200, 87, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 24, height: 24, borderRadius: 8, background: 'var(--amber-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Shield size={12} color="var(--amber)" />
           </div>
           <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--amber)' }}>AI-Powered Risk Control</span>
@@ -419,7 +475,7 @@ function RightSidebar({ result, isLoading }) {
   )
 }
 
-function OverviewPanel({ result, agentStatuses, isLoading }) {
+function OverviewPanel({ result, agentStatuses, isLoading, onReviewFactor }) {
   const decision = result?.decision
   const financials = result?.financials
   const news = result?.news
@@ -427,26 +483,52 @@ function OverviewPanel({ result, agentStatuses, isLoading }) {
   const scores = decision?.scores || {}
   const currency = financials?.quote?.currency || 'USD'
 
-  const revenueData = financials?.revenueData?.map(d => ({
+  const [timeframe, setTimeframe] = useState('3Y')
+
+  const fullRevenueData = financials?.revenueData?.map(d => ({
     year: String(d.year),
     Revenue: d.revenue,
     'Net Income': d.netIncome,
   })) || []
 
+  let revenueData = fullRevenueData
+  if (timeframe === '1Y') {
+    revenueData = fullRevenueData.slice(-2) // Show last 2 points (1 year interval)
+  } else if (timeframe === '3Y') {
+    revenueData = fullRevenueData.slice(-3) // Show last 3 points (3 years data)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, width: '100%' }}>
-      {/* 1. Core Investment Factors Table */}
-      <FactorTable scores={scores} isLoading={isLoading} />
+      {/* 1. Analysis Execution Stepper */}
+      <HorizontalAnalysisStepper agentStatuses={agentStatuses} isLoading={isLoading} />
 
-      {/* 2. Bottom Grid: Chart & KPI Row + AI Timeline & News */}
+      {/* 2. Core Investment Factors Table */}
+      <FactorTable scores={scores} isLoading={isLoading} onReviewFactor={onReviewFactor} />
+
+      {/* 3. Bottom Grid: Chart & KPI Row + AI Timeline & News */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr', gap: 20 }}>
         {/* Left Side: Chart Card & KPI metrics */}
         <div className="card" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className="label">Revenue & Income Trends</div>
-            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.02)', padding: 2, borderRadius: 99 }}>
+            <div style={{ display: 'flex', gap: 4, background: 'var(--bg-tag)', padding: 2, borderRadius: 99 }}>
               {['1Y', '3Y', 'Max'].map(p => (
-                <button key={p} style={{ padding: '3px 8px', borderRadius: 99, border: 'none', background: p === '3Y' ? 'rgba(255,255,255,0.06)' : 'transparent', color: p === '3Y' ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: 10, fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+                <button 
+                  key={p} 
+                  onClick={() => setTimeframe(p)}
+                  style={{ 
+                    padding: '3px 8px', 
+                    borderRadius: 99, 
+                    border: 'none', 
+                    background: p === timeframe ? 'var(--border)' : 'transparent', 
+                    color: p === timeframe ? 'var(--text-primary)' : 'var(--text-muted)', 
+                    fontSize: 10, 
+                    fontWeight: 500, 
+                    cursor: 'pointer', 
+                    transition: 'all 0.15s' 
+                  }}
+                >
                   {p}
                 </button>
               ))}
@@ -471,14 +553,14 @@ function OverviewPanel({ result, agentStatuses, isLoading }) {
           )}
 
           {!isLoading && financials?.revenueData?.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
               {[
                 { label: 'Revenue', value: fmt(financials.revenue, currency) },
                 { label: 'EBITDA', value: fmt(financials.ebitda, currency) },
                 { label: 'Net Income', value: fmt(financials.netIncome, currency) },
                 { label: 'Gross Margin', value: financials.grossMargin ? `${financials.grossMargin.toFixed(1)}%` : 'N/A' }
               ].map(({ label, value }) => (
-                <div key={label} style={{ padding: '8px 10px', background: 'rgba(255, 255, 255, 0.015)', borderRadius: 8 }}>
+                <div key={label} style={{ padding: '8px 10px', background: 'var(--bg-sidebar)', borderRadius: 8, border: '1px solid var(--border-light)' }}>
                   <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
                   <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text-primary)' }}>{value}</div>
                 </div>
@@ -487,13 +569,10 @@ function OverviewPanel({ result, agentStatuses, isLoading }) {
           )}
         </div>
 
-        {/* Right Side: Timeline & Market Summary or Signals */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Analysis Execution */}
-          <AnalysisMatrix agentStatuses={agentStatuses} isLoading={isLoading} />
-
+        {/* Right Side: Signals & News */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: '100%' }}>
           {/* Signals & News */}
-          <div className="card" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="card" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Newspaper size={12} color="var(--text-secondary)" />
               <span className="label">Signals & News</span>
@@ -505,7 +584,7 @@ function OverviewPanel({ result, agentStatuses, isLoading }) {
             ) : news?.articles?.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {news.articles.slice(0, 2).map((a, i) => (
-                  <div key={i} style={{ paddingBottom: i < 1 ? 8 : 0, borderBottom: i < 1 ? '1px solid rgba(255, 255, 255, 0.03)' : 'none' }}>
+                  <div key={i} style={{ paddingBottom: i < 1 ? 8 : 0, borderBottom: i < 1 ? '1px solid var(--border-light)' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{
                         padding: '2px 8px', borderRadius: 99, fontSize: 9, fontWeight: 500,
@@ -572,7 +651,7 @@ function FinancialsPanel({ result }) {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           {metrics.map(({ label, value, positive }) => (
-            <div key={label} style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(255, 255, 255, 0.015)' }}>
+            <div key={label} style={{ padding: '14px 16px', borderRadius: 14, background: 'var(--bg-sidebar)', border: '1px solid var(--border-light)' }}>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</div>
               <div style={{ fontSize: 16, fontWeight: 500, color: positive === true ? 'var(--green)' : positive === false ? 'var(--red)' : 'var(--text-primary)' }}>{value}</div>
             </div>
@@ -589,9 +668,9 @@ function FinancialsPanel({ result }) {
               <XAxis dataKey="year" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tickFormatter={v => fmt(v, currency)} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} width={52} />
               <Tooltip content={<CustomTooltip currency={currency} />} />
-              <Bar dataKey="Revenue" fill="var(--text-primary)" radius={[3,3,0,0]} opacity={0.8} />
-              <Bar dataKey="Gross Profit" fill="var(--text-secondary)" radius={[3,3,0,0]} opacity={0.5} />
-              <Bar dataKey="Net Income" fill="var(--text-muted)" radius={[3,3,0,0]} opacity={0.3} />
+              <Bar dataKey="Revenue" fill="var(--blue)" radius={[3,3,0,0]} opacity={0.8} />
+              <Bar dataKey="Gross Profit" fill="var(--accent)" radius={[3,3,0,0]} opacity={0.6} />
+              <Bar dataKey="Net Income" fill="var(--green)" radius={[3,3,0,0]} opacity={0.8} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -602,15 +681,15 @@ function FinancialsPanel({ result }) {
             <AreaChart data={f.revenueData?.map(d => ({ year: String(d.year), EPS: d.eps })) || []} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="epsG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--text-secondary)" stopOpacity={0.12} />
-                  <stop offset="95%" stopColor="var(--text-secondary)" stopOpacity={0.01} />
+                  <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.12} />
+                  <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.01} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
               <XAxis dataKey="year" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tickFormatter={v => currency === 'INR' ? `₹${v.toFixed(1)}` : `$${v.toFixed(1)}`} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
               <Tooltip content={<CustomTooltip currency={currency} />} />
-              <Area type="monotone" dataKey="EPS" stroke="var(--text-secondary)" strokeWidth={2} fill="url(#epsG)" />
+              <Area type="monotone" dataKey="EPS" stroke="var(--accent)" strokeWidth={2} fill="url(#epsG)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -622,6 +701,13 @@ function FinancialsPanel({ result }) {
 function NewsPanel({ result }) {
   const news = result?.news
   if (!news) return <EmptyState />
+
+  const [sentimentFilter, setSentimentFilter] = useState('all')
+
+  const filteredArticles = news.articles?.filter(a => {
+    if (sentimentFilter === 'all') return true
+    return a.sentiment?.toLowerCase() === sentimentFilter.toLowerCase()
+  }) || []
 
   return (
     <div style={{ display: 'flex', gap: 16 }}>
@@ -658,34 +744,65 @@ function NewsPanel({ result }) {
           )}
         </div>
 
-        {news.articles?.map((a, i) => (
-          <motion.div
-            key={i}
-            className="card"
-            style={{ padding: '16px 20px', borderLeft: `3px solid ${a.sentiment === 'positive' ? 'var(--green)' : a.sentiment === 'negative' ? 'var(--red)' : 'var(--amber)'}` }}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                  <span className={`tag tag-${a.sentiment === 'positive' ? 'positive' : a.sentiment === 'negative' ? 'negative' : 'neutral'}`}>{a.sentiment}</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{a.source}</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>·</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{a.date}</span>
+        {/* Sentiment Filter Controls */}
+        <div style={{ display: 'flex', gap: 8, margin: '8px 0' }}>
+          {['All', 'Positive', 'Neutral', 'Negative'].map(f => (
+            <button
+              key={f}
+              onClick={() => setSentimentFilter(f.toLowerCase())}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 99,
+                border: '1px solid var(--border)',
+                background: sentimentFilter === f.toLowerCase() ? 'var(--accent)' : 'transparent',
+                color: sentimentFilter === f.toLowerCase() ? 'var(--btn-primary-text, #ffffff)' : 'var(--text-secondary)',
+                fontSize: 11.5,
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s'
+              }}
+              onMouseEnter={e => { if (sentimentFilter !== f.toLowerCase()) e.currentTarget.style.background = 'var(--bg-hover)' }}
+              onMouseLeave={e => { if (sentimentFilter !== f.toLowerCase()) e.currentTarget.style.background = 'transparent' }}
+            >
+              {f} ({f === 'All' ? news.articles?.length || 0 : news.articles?.filter(a => a.sentiment?.toLowerCase() === f.toLowerCase()).length || 0})
+            </button>
+          ))}
+        </div>
+
+        {filteredArticles.length > 0 ? (
+          filteredArticles.map((a, i) => (
+            <motion.div
+              key={i}
+              className="card"
+              style={{ padding: '16px 20px', borderLeft: `3px solid ${a.sentiment === 'positive' ? 'var(--green)' : a.sentiment === 'negative' ? 'var(--red)' : 'var(--amber)'}` }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                    <span className={`tag tag-${a.sentiment === 'positive' ? 'positive' : a.sentiment === 'negative' ? 'negative' : 'neutral'}`}>{a.sentiment}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{a.source}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>·</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{a.date}</span>
+                  </div>
+                  <h3 style={{ fontSize: 13, fontWeight: 500, marginBottom: 5, lineHeight: 1.4 }}>{a.headline}</h3>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{a.summary}</p>
                 </div>
-                <h3 style={{ fontSize: 13, fontWeight: 500, marginBottom: 5, lineHeight: 1.4 }}>{a.headline}</h3>
-                <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{a.summary}</p>
+                {a.url && a.url !== '#' && (
+                  <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0, color: 'var(--text-muted)' }}>
+                    <ExternalLink size={13} />
+                  </a>
+                )}
               </div>
-              {a.url && a.url !== '#' && (
-                <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0, color: 'var(--text-muted)' }}>
-                  <ExternalLink size={13} />
-                </a>
-              )}
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))
+        ) : (
+          <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+            No articles found matching "{sentimentFilter}" sentiment.
+          </div>
+        )}
       </div>
     </div>
   )
@@ -695,12 +812,19 @@ function RiskPanel({ result }) {
   const risks = result?.risks
   if (!risks) return <EmptyState />
 
+  const [severityFilter, setSeverityFilter] = useState('all')
+
   const sConfig = {
     low: { color: 'var(--green)', bg: 'var(--green-bg)' },
     medium: { color: 'var(--amber)', bg: 'var(--amber-bg)' },
     high: { color: 'var(--red)', bg: 'var(--red-bg)' },
     critical: { color: 'var(--red)', bg: 'var(--red-bg)' },
   }
+
+  const filteredRisks = risks.risks?.filter(r => {
+    if (severityFilter === 'all') return true
+    return r.severity?.toLowerCase() === severityFilter.toLowerCase()
+  }) || []
 
   return (
     <div style={{ display: 'flex', gap: 16 }}>
@@ -737,30 +861,65 @@ function RiskPanel({ result }) {
           </div>
         </div>
 
-        {risks.risks?.map((r, i) => (
-          <motion.div
-            key={i}
-            className="card"
-            style={{ padding: '14px 20px', borderLeft: `3px solid ${sConfig[r.severity]?.color}` }}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                  <span style={{ padding: '3px 10px', borderRadius: 99, background: sConfig[r.severity]?.bg, fontSize: 9, fontWeight: 500, color: sConfig[r.severity]?.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{r.severity}</span>
-                  <span style={{ fontSize: 12, fontWeight: 500 }}>{r.category}</span>
+        {/* Severity Filter Controls */}
+        <div style={{ display: 'flex', gap: 8, margin: '8px 0' }}>
+          {['All', 'Critical', 'High', 'Medium', 'Low'].map(f => {
+            const level = f.toLowerCase()
+            const count = level === 'all' ? risks.risks?.length || 0 : risks.risks?.filter(r => r.severity === level).length || 0
+            return (
+              <button
+                key={f}
+                onClick={() => setSeverityFilter(level)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 99,
+                  border: '1px solid var(--border)',
+                  background: severityFilter === level ? 'var(--accent)' : 'transparent',
+                  color: severityFilter === level ? 'var(--btn-primary-text, #ffffff)' : 'var(--text-secondary)',
+                  fontSize: 11.5,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+                onMouseEnter={e => { if (severityFilter !== level) e.currentTarget.style.background = 'var(--bg-hover)' }}
+                onMouseLeave={e => { if (severityFilter !== level) e.currentTarget.style.background = 'transparent' }}
+              >
+                {f} ({count})
+              </button>
+            )
+          })}
+        </div>
+
+        {filteredRisks.length > 0 ? (
+          filteredRisks.map((r, i) => (
+            <motion.div
+              key={i}
+              className="card"
+              style={{ padding: '14px 20px', borderLeft: `3px solid ${sConfig[r.severity]?.color}` }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ padding: '3px 10px', borderRadius: 99, background: sConfig[r.severity]?.bg, fontSize: 9, fontWeight: 500, color: sConfig[r.severity]?.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{r.severity}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500 }}>{r.category}</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{r.description}</p>
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{r.description}</p>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Probability</div>
+                  <div style={{ fontSize: 12, fontWeight: 500, textTransform: 'capitalize', color: r.probability === 'high' ? 'var(--red)' : r.probability === 'medium' ? 'var(--amber)' : 'var(--green)' }}>{r.probability}</div>
+                </div>
               </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Probability</div>
-                <div style={{ fontSize: 12, fontWeight: 500, textTransform: 'capitalize', color: r.probability === 'high' ? 'var(--red)' : r.probability === 'medium' ? 'var(--amber)' : 'var(--green)' }}>{r.probability}</div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))
+        ) : (
+          <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+            No risks found matching "{severityFilter}" severity.
+          </div>
+        )}
       </div>
     </div>
   )
@@ -860,14 +1019,14 @@ function AIInsightsPanel({ result }) {
                 { label: 'Risk', key: 'risk', color: 'var(--amber)' },
                 { label: 'Valuation', key: 'valuation', color: 'var(--red)' },
               ].map(({ label, key, color }) => (
-                <div key={key} style={{ padding: '14px 10px', borderRadius: 16, background: 'rgba(255, 255, 255, 0.015)', textAlign: 'center' }}>
+                <div key={key} style={{ padding: '14px 10px', borderRadius: 16, background: 'var(--bg-sidebar)', border: '1px solid var(--border-light)', textAlign: 'center' }}>
                   <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
                   <div style={{ fontSize: 20, fontWeight: 500, color }}>{decision.scores?.[key] || 0}</div>
                   <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>/100</div>
                 </div>
               ))}
             </div>
-            <p style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.7, borderLeft: '2px solid rgba(255, 255, 255, 0.15)', paddingLeft: 14 }}>{decision.reasoning}</p>
+            <p style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.7, borderLeft: '2px solid var(--border)', paddingLeft: 14 }}>{decision.reasoning}</p>
             {decision.timeHorizon && (
               <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-secondary)' }}>Time Horizon: <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{decision.timeHorizon}</span></div>
             )}
@@ -910,7 +1069,7 @@ function AIInsightsPanel({ result }) {
               </button>
             </div>
             {showReport && (
-              <pre style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 400, overflowY: 'auto', padding: 12, background: 'rgba(255, 255, 255, 0.02)', borderRadius: 8, border: '1px solid var(--border-light)' }}>
+              <pre style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 400, overflowY: 'auto', padding: 12, background: 'var(--bg-sidebar)', borderRadius: 8, border: '1px solid var(--border-light)' }}>
                 {report}
               </pre>
             )}
@@ -968,7 +1127,7 @@ export default function DashboardPage({ params }) {
   // Initialize auth and load active theme
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('alpha_terminal_theme') || 'cyberpunk'
+      const savedTheme = localStorage.getItem('alpha_terminal_theme_v2') || 'jeton'
       applyTheme(savedTheme)
     }
 
@@ -1068,47 +1227,54 @@ export default function DashboardPage({ params }) {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'inherit', transition: 'background 0.3s ease' }}>
-      <aside style={{
-        width: 'var(--sidebar-width)',
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'inherit', transition: 'background 0.3s ease' }}>
+      {/* Consolidated Top Navigation Bar */}
+      <header style={{
+        height: 'var(--header-height)',
+        borderBottom: '1px solid var(--border)',
         background: 'var(--bg-sidebar)',
-        backdropFilter: 'blur(12px)',
-        borderRight: '1px solid var(--border-light)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        position: 'sticky',
         top: 0,
-        left: 0,
-        bottom: 0,
-        zIndex: 30,
+        zIndex: 50,
       }}>
-        <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid var(--border-light)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.8 }}>
-            <TrendingUp size={12} color="var(--text-secondary)" />
-            <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.2em', color: 'var(--text-secondary)' }}>ALPHALENS</span>
+        {/* Left Side: Brand Logo & Divider & Ticker Details */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => router.push('/')}>
+            <TrendingUp size={16} color="var(--accent)" />
+            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text-primary)' }}>ALPHALENS</span>
           </div>
+
+          <div style={{ width: 1, height: 20, background: 'var(--border)' }} />
+
+          {!isLoading && ticker ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{companyName}</span>
+              <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'var(--text-secondary)', background: 'var(--bg-tag)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>{ticker}</span>
+              {quote && (
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {currency === 'INR' ? `₹${quote.regularMarketPrice?.toFixed(2)}` : `$${quote.regularMarketPrice?.toFixed(2)}`}
+                  </span>
+                  <span style={{ fontSize: 10.5, fontWeight: 500, color: quote.regularMarketChange >= 0 ? 'var(--green)' : 'var(--red)', display: 'flex', gap: 2 }}>
+                    {quote.regularMarketChange >= 0 ? '+' : ''}{quote.regularMarketChangePercent?.toFixed(2)}%
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : isLoading ? (
+            <div className="skeleton" style={{ width: 140, height: 18 }} />
+          ) : null}
         </div>
 
-        {!isLoading && ticker && (
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-light)', background: 'var(--bg-hover)' }}>
-            <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>{result?.company?.industry || ''}</div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{companyName}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{ticker}</div>
-            {quote && (
-              <div style={{ marginTop: 6, display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-primary)' }}>
-                  {currency === 'INR' ? `₹${quote.regularMarketPrice?.toFixed(2)}` : `$${quote.regularMarketPrice?.toFixed(2)}`}
-                </span>
-                <span style={{ fontSize: 10, fontWeight: 500, color: quote.regularMarketChange >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                  {quote.regularMarketChange >= 0 ? '+' : ''}{quote.regularMarketChangePercent?.toFixed(2)}%
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        <nav style={{ padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-          {NAV.map(({ id, label, icon: Icon }) => {
+        {/* Center: Consolidated Tabs */}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          {NAV.map(({ id, label }) => {
             const active = activeTab === id
             return (
               <button
@@ -1116,153 +1282,119 @@ export default function DashboardPage({ params }) {
                 onClick={() => !isLoading && setActiveTab(id)}
                 disabled={isLoading}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                  width: '100%',
-                  padding: '16px 20px',
+                  padding: '6px 14px',
                   borderRadius: 99,
-                  border: 'none',
-                  background: active ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-                  color: active ? 'var(--text-primary)' : 'var(--text-sidebar)',
-                  fontSize: 13.5,
-                  fontWeight: active ? 500 : 400,
+                  fontSize: 12.5,
+                  fontWeight: 500,
                   cursor: isLoading ? 'default' : 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
-                  opacity: isLoading ? 0.5 : 1,
+                  background: active ? 'var(--btn-primary-bg, var(--accent))' : 'transparent',
+                  color: active ? 'var(--btn-primary-text, #ffffff)' : 'var(--text-secondary)',
+                  border: active ? 'var(--btn-primary-border, none)' : '1.5px solid transparent',
+                  transition: 'all 0.15s ease',
+                  opacity: isLoading ? 0.5 : 1
                 }}
-                onMouseEnter={e => { if (!active && !isLoading) e.currentTarget.style.background = 'var(--bg-hover)' }}
-                onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={e => { if (!active && !isLoading) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)' } }}
+                onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
               >
-                <Icon size={18} color={active ? 'var(--text-primary)' : 'var(--text-sidebar)'} />
-                <span>{label}</span>
+                {label}
               </button>
             )
           })}
-        </nav>
+        </div>
 
-        <div style={{ padding: '12px 10px', borderTop: '1px solid var(--border-light)' }}>
+        {/* Right Side: Global controls & Profile */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {/* VIP Intel Star */}
           <button
             onClick={() => setSettingsOpen(true)}
             style={{
               display: 'flex',
-              flexDirection: 'column',
+              alignItems: 'center',
               gap: 6,
-              width: '100%',
-              padding: '14px 16px',
-              borderRadius: 12,
-              border: '1px solid rgba(255, 200, 87, 0.1)',
-              background: 'linear-gradient(135deg, rgba(255, 200, 87, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              color: 'var(--text-primary)',
+              padding: '6px 12px',
+              borderRadius: 99,
+              border: '1px solid var(--amber-border)',
+              background: 'var(--amber-bg)',
+              color: 'var(--amber)',
+              fontSize: 11.5,
+              fontWeight: 500,
               cursor: 'pointer',
-              marginBottom: 12,
-              textAlign: 'left',
               transition: 'all 0.2s'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,200,87,0.04)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 200, 87, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--amber-border)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--amber-bg)'}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Star size={12} color="var(--amber)" />
-              <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--amber)' }}>Unlock VIP Intel</span>
-            </div>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.4 }}>Upgrade to institutional research grade depth & queries.</span>
-            <span style={{ fontSize: 10, color: 'var(--amber)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-              Upgrade Now <span>→</span>
-            </span>
+            <Star size={11} color="var(--amber)" fill="var(--amber)" style={{ opacity: 0.8 }} />
+            <span>VIP Upgrade</span>
           </button>
 
-          <div style={{ display: 'flex', gap: 6, paddingBottom: 8 }}>
-            <button 
-              className="btn-ghost btn" 
-              style={{ flex: 1, justifyContent: 'center', fontSize: 11, padding: '8px', borderRadius: 99 }}
-              onClick={() => setSettingsOpen(true)}
-            >
-              <Settings size={12} />
-            </button>
-            <button 
-              className="btn-ghost btn" 
-              style={{ flex: 1, justifyContent: 'center', fontSize: 11, padding: '8px', borderRadius: 99 }} 
-              onClick={() => router.push('/')}
-            >
-              <Search size={12} />
-            </button>
-          </div>
-          <div style={{ padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 1, height: 16, background: 'var(--border)' }} />
+
+          <button 
+            className="btn-ghost btn" 
+            style={{ width: 32, height: 32, padding: 0, justifyContent: 'center', borderRadius: '50%' }}
+            onClick={() => router.push('/')}
+            title="Search New Stock"
+          >
+            <Search size={14} />
+          </button>
+
+          <button 
+            className="btn-ghost btn" 
+            style={{ width: 32, height: 32, padding: 0, justifyContent: 'center', borderRadius: '50%' }} 
+            onClick={() => setSettingsOpen(true)}
+            title="Settings"
+          >
+            <Settings size={14} />
+          </button>
+
+          <div 
+            onClick={() => setSettingsOpen(true)}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              cursor: 'pointer',
+              padding: '3px',
+              borderRadius: '50%',
+              background: 'var(--bg-tag)',
+              border: '1px solid var(--border-light)'
+            }}
+            title="User Profile"
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-tag)'}
+          >
             <div style={{ 
               width: 24, 
               height: 24, 
               borderRadius: '50%', 
-              background: 'rgba(255, 255, 255, 0.05)', 
+              background: 'var(--accent)', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
               fontSize: 10, 
-              fontWeight: 500, 
-              color: 'var(--text-primary)' 
+              fontWeight: 600, 
+              color: '#ffffff' 
             }}>
               {(user.user_metadata?.full_name || user.email || 'A')[0].toUpperCase()}
             </div>
-            <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 500 }}>
-              {user.user_metadata?.full_name || user.email.split('@')[0]}
-            </span>
           </div>
+
+          <button
+            onClick={runAnalysis}
+            disabled={isLoading}
+            className="btn btn-glow"
+            style={{ opacity: isLoading ? 0.7 : 1, padding: '8px 16px', borderRadius: 99, fontSize: 12.5, height: 36, background: 'var(--btn-primary-bg, var(--accent))', color: 'var(--btn-primary-text, #ffffff)', border: 'var(--btn-primary-border, none)', cursor: 'pointer' }}
+          >
+            {isLoading ? <div className="spinner" style={{ borderTopColor: 'currentColor', width: 10, height: 10 }} /> : <RefreshCw size={12} />}
+            <span>{isLoading ? 'Analyzing…' : 'Analyze'}</span>
+          </button>
         </div>
-      </aside>
+      </header>
 
-      <div style={{ marginLeft: 'var(--sidebar-width)', flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <header style={{
-          height: 'var(--header-height)',
-          borderBottom: '1px solid var(--border)',
-          background: 'var(--bg-card)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-          gap: 16,
-          position: 'sticky',
-          top: 0,
-          zIndex: 20,
-        }}>
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center', flex: 1 }}>
-            <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>All Assets</span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer' }}>Markets</span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer' }}>Research Tools</span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer' }}>More</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            {isLoading ? (
-              <div className="skeleton" style={{ width: 120, height: 18 }} />
-            ) : (
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', display: 'flex', gap: 8 }}>
-                {ticker && <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>{ticker}</span>}
-                <span>{companyName}</span>
-              </div>
-            )}
-
-            {!isLoading && (
-              <div className="tag tag-purple" style={{ fontSize: 9, borderRadius: 99 }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--text-secondary)', animation: 'pulse 2s infinite' }} />
-                Live Scan
-              </div>
-            )}
-
-            <button
-              onClick={runAnalysis}
-              disabled={isLoading}
-              className="btn btn-glow"
-              style={{ opacity: isLoading ? 0.7 : 1, padding: '8px 20px', borderRadius: 99, fontSize: 13, height: 38 }}
-            >
-              {isLoading ? <div className="spinner" style={{ borderTopColor: 'currentColor' }} /> : <RefreshCw size={13} />}
-              {isLoading ? 'Analyzing…' : 'Analyze'}
-            </button>
-          </div>
-        </header>
-
-        <main style={{ flex: 1, padding: '36px 40px', display: 'flex', gap: 32, maxWidth: 1600 }}>
+      {/* Main Workspace Frame */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <main style={{ flex: 1, padding: '32px 24px', display: 'flex', gap: 32, maxWidth: 1440, margin: '0 auto', width: '100%' }}>
           {/* Column A: Main workspace */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             {error && (
@@ -1274,23 +1406,26 @@ export default function DashboardPage({ params }) {
               </div>
             )}
 
-            {/* Tab pill selectors */}
-            <div className="tab-pill-bar">
-              {NAV.map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => !isLoading && setActiveTab(id)}
-                  className={`tab-pill ${activeTab === id ? 'active' : ''}`}
-                  disabled={isLoading}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
             <AnimatePresence mode="wait">
               <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-                {activeTab === 'overview' && <OverviewPanel result={result} agentStatuses={agentStatuses} isLoading={isLoading} />}
+                {activeTab === 'overview' && (
+                  <OverviewPanel 
+                    result={result} 
+                    agentStatuses={agentStatuses} 
+                    isLoading={isLoading} 
+                    onReviewFactor={(factorId) => {
+                      const mapping = {
+                        financial: 'financials',
+                        growth: 'growth',
+                        moat: 'competitors',
+                        sentiment: 'news',
+                        valuation: 'growth',
+                        risk: 'risk'
+                      }
+                      setActiveTab(mapping[factorId] || 'overview')
+                    }}
+                  />
+                )}
                 {activeTab === 'financials' && (isLoading ? <EmptyState /> : <FinancialsPanel result={result} />)}
                 {activeTab === 'news' && (isLoading ? <EmptyState /> : <NewsPanel result={result} />)}
                 {activeTab === 'risk' && (isLoading ? <EmptyState /> : <RiskPanel result={result} />)}
@@ -1301,7 +1436,16 @@ export default function DashboardPage({ params }) {
           </div>
 
           {/* Column B: Right Sidebar widgets */}
-          <div style={{ width: 320, display: 'flex', flexDirection: 'column', gap: 20, flexShrink: 0 }}>
+          <div style={{ 
+            width: 320, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 20, 
+            flexShrink: 0,
+            position: 'sticky',
+            top: 'calc(var(--header-height) + 24px)',
+            height: 'fit-content'
+          }}>
             <RightSidebar result={result} isLoading={isLoading} />
           </div>
         </main>

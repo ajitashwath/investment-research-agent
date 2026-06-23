@@ -1,56 +1,85 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Default Theme: Obsidian Monochrome Glass */
-  --bg: #070709;
-  --bg-card: #0c0c0e;
-  --bg-sidebar: #0d0d11;
-  --bg-hover: rgba(255, 255, 255, 0.035);
-  --bg-input: rgba(255, 255, 255, 0.015);
-  --bg-tag: rgba(255, 255, 255, 0.03);
+  /* Default Theme: Jeton (Warm Sunset Canvas) */
+  --bg: #ffffff;
+  --bg-card: #fef5f3; /* Sunset Fade */
+  --bg-sidebar: #ffffff; /* Pure White */
+  --bg-hover: rgba(247, 59, 32, 0.04);
+  --bg-input: #ffffff;
+  --bg-tag: rgba(247, 59, 32, 0.05);
 
-  --border: rgba(255, 255, 255, 0.05);
-  --border-light: rgba(255, 255, 255, 0.03);
+  --border: rgba(54, 8, 2, 0.08); /* Brandwood at 8% */
+  --border-light: rgba(54, 8, 2, 0.04);
 
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.65);
-  --text-muted: rgba(255, 255, 255, 0.45);
-  --text-sidebar: rgba(255, 255, 255, 0.65);
+  --text-primary: #360802; /* Brandwood */
+  --text-secondary: rgba(54, 8, 2, 0.7);
+  --text-muted: rgba(54, 8, 2, 0.45);
+  --text-sidebar: #360802;
 
-  --green: #5ae39b;
-  --green-bg: rgba(90, 227, 155, 0.03);
-  --green-border: rgba(90, 227, 155, 0.05);
+  --green: #34c771; /* Mint Action */
+  --green-bg: rgba(52, 199, 113, 0.05);
+  --green-border: rgba(52, 199, 113, 0.15);
 
-  --red: #ff6b6b;
-  --red-bg: rgba(255, 107, 107, 0.03);
-  --red-border: rgba(255, 107, 107, 0.05);
+  --red: #fb2d54; /* Magenta Spark */
+  --red-bg: rgba(251, 45, 84, 0.05);
+  --red-border: rgba(251, 45, 84, 0.15);
 
-  --amber: #ffc857;
-  --amber-bg: rgba(255, 200, 87, 0.03);
-  --amber-border: rgba(255, 200, 87, 0.05);
+  --amber: #f73b20; /* Coral Flame */
+  --amber-bg: rgba(247, 59, 32, 0.05);
+  --amber-border: rgba(247, 59, 32, 0.15);
 
-  --blue: rgba(255, 255, 255, 0.65);
-  --blue-bg: rgba(255, 255, 255, 0.02);
-  --blue-border: rgba(255, 255, 255, 0.05);
+  --blue: #477ee9; /* Cobalt Pulse */
+  --blue-bg: rgba(71, 126, 233, 0.05);
+  --blue-border: rgba(71, 126, 233, 0.15);
 
-  --purple: #8b7cff;
-  --purple-bg: rgba(139, 124, 255, 0.03);
-  --purple-border: rgba(139, 124, 255, 0.05);
+  --purple: #fb2d54; /* Magenta Spark */
+  --purple-bg: rgba(251, 45, 84, 0.05);
+  --purple-border: rgba(251, 45, 84, 0.15);
 
-  --accent: #ffffff;
-  --accent-light: rgba(255, 255, 255, 0.035);
+  --accent: #f73b20; /* Coral Flame */
+  --accent-light: rgba(247, 59, 32, 0.08);
 
   --sidebar-width: 240px;
-  --header-height: 56px;
+  --header-height: 64px;
 
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.5);
-  --shadow-md: 0 16px 48px rgba(0,0,0,0.7);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.8);
+  --shadow-sm: 0 4px 12px rgba(54, 8, 2, 0.04);
+  --shadow-md: rgba(0, 0, 0, 0.05) 0px -4px 16px 0px; /* Upward shadow */
+  --shadow-card: rgba(0, 0, 0, 0.05) 0px -4px 16px 0px; /* Upward shadow */
+  --shadow-lg: rgba(247, 59, 32, 0.1) 0px 8px 24px 0px, rgba(247, 59, 32, 0.05) 0px 2px 8px 0px; /* Warm glow shadow */
+
+  --bg-hover-card: #ffffff;
+  --border-hover: rgba(54, 8, 2, 0.12);
+  --shadow-card-hover: rgba(0, 0, 0, 0.08) 0px -6px 20px 0px;
+
+  --btn-primary-hover-bg: #ffffff;
+  --btn-primary-hover-border: #f73b20;
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
+
+  /* Jeton Button Styles */
+  --btn-primary-bg: #ffffff;
+  --btn-primary-text: #f73b20;
+  --btn-primary-border: 1.5px solid #f73b20;
+  --btn-primary-shadow: none;
+
+  /* Jeton Design Tokens */
+  --color-coral-flame: #f73b20;
+  --gradient-coral-flame: linear-gradient(135deg, #f8a4a4 0%, #f73b20 100%);
+  --color-brandwood: #360802;
+  --color-sunset-fade: #fef5f3;
+  --color-blush-mist: #fbdfd9;
+  --color-pure-white: #ffffff;
+  --color-carbon: #000000;
+  --color-mint-action: #34c771;
+  --color-cobalt-pulse: #477ee9;
+  --color-magenta-spark: #fb2d54;
+
+  --font-sequel-sans: 'Outfit', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 *, *::before, *::after {
@@ -67,13 +96,23 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "SF Pro Display", "SF Pro Text", "SF Compact Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--bg);
   color: var(--text-primary);
   font-size: 13px;
   line-height: 1.5;
   min-height: 100vh;
   transition: color 0.3s ease, background 0.3s ease;
+}
+
+body, input, button, select, textarea {
+  font-family: var(--font-sequel-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sequel-sans);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: 0.03em;
 }
 
 ::selection {
@@ -119,9 +158,9 @@ body {
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.025);
-  border-color: rgba(255, 255, 255, 0.035);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7);
+  background: var(--bg-hover-card, rgba(255, 255, 255, 0.025));
+  border-color: var(--border-hover, rgba(255, 255, 255, 0.035));
+  box-shadow: var(--shadow-card-hover, 0 20px 48px rgba(0, 0, 0, 0.7));
   transform: translateY(-2px);
 }
 
@@ -193,12 +232,14 @@ body {
 }
 
 .btn-primary {
-  background: var(--text-primary);
-  color: var(--bg);
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.05);
+  background: var(--btn-primary-bg, var(--text-primary));
+  color: var(--btn-primary-text, var(--bg));
+  border: var(--btn-primary-border, none);
+  box-shadow: var(--btn-primary-shadow, 0 4px 16px rgba(255, 255, 255, 0.05));
 }
 .btn-primary:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--btn-primary-hover-bg, rgba(255, 255, 255, 0.9));
+  border-color: var(--btn-primary-hover-border, currentColor);
   transform: scale(1.02);
 }
 .btn-primary:active {
@@ -304,35 +345,36 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 500;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border);
 }
 .premium-table td {
   padding: 16px;
   font-size: 12.5px;
   color: var(--text-secondary);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-light);
   vertical-align: middle;
 }
 .premium-table tr:hover td {
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--bg-hover);
 }
 .premium-table-btn {
   padding: 6px 14px;
   border-radius: 99px;
-  border: none;
-  background: #ffffff;
-  color: #000000;
-  font-size: 11.5px;
+  border: 1.5px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 .premium-table-btn:hover {
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-0.5px);
+  background: var(--accent-light);
+  border-color: var(--accent);
+  transform: translateY(-0.5px) scale(1.02);
 }
 .premium-table-btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
 }
 .badge-dot {
   width: 6px;
@@ -364,7 +406,7 @@ body {
   background: rgba(255, 255, 255, 0.02);
 }
 .tab-pill.active {
-  background: #ffffff;
-  color: #000000;
-  border-color: #ffffff;
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
 }
