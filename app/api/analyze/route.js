@@ -51,7 +51,7 @@ export async function POST(request) {
       const onProgress = ({ agent, status, message }) => {
         if (status === 'running') {
           agentProgress[agent] = 30
-        } else if (status === 'done') {
+        } else if (status === 'done' || status === 'warning') {
           agentProgress[agent] = 100
         } else if (status === 'error') {
           agentProgress[agent] = -1
@@ -67,7 +67,12 @@ export async function POST(request) {
       }
 
       try {
-        const result = await runInvestmentAnalysis(company.trim(), onProgress, { model, depth })
+        const result = await runInvestmentAnalysis(company.trim(), onProgress, {
+          model,
+          depth,
+          geminiKey,
+          tavilyKey,
+        })
 
         send({
           type: 'result',

@@ -10,17 +10,21 @@ export async function newsAgentNode(state, config) {
 
   try {
     const resolvedTicker = ticker || companyData?.ticker || ''
+    const currentYear = new Date().getFullYear()
+    const prevYear = currentYear - 1
     const queries = [
-      `${company} ${resolvedTicker} latest news 2024 2025`,
+      `${company} ${resolvedTicker} latest news ${prevYear} ${currentYear}`,
       `${company} earnings revenue analyst rating upgrade downgrade`,
       `${company} acquisition merger partnership product launch`,
       `${company} lawsuit regulation antitrust investigation`,
     ]
 
-    const { results } = await tavilySearchMultiple(queries, {
+    const { results, warnings } = await tavilySearchMultiple(queries, {
       maxResults: 6,
       searchDepth: 'advanced',
-      days: 60,
+      days: 30,
+      topic: 'news',
+      config,
     })
 
     const limitedResults = results.slice(0, 8)
@@ -36,7 +40,7 @@ Published: ${r.publishedDate || 'Recent'}
 Content: ${r.content}`).join('\n\n---\n\n')}
 `
 
-    const llm = getGeminiFlash()
+    const llm = getGeminiFlash(config)
     const raw = await callGemini(llm, NEWS_ANALYSIS_PROMPT, context)
     const newsData = extractJSON(raw)
 
@@ -54,9 +58,14 @@ Content: ${r.content}`).join('\n\n---\n\n')}
       source: (() => { try { return new URL(r.url).hostname.replace('www.', '') } catch { return 'Unknown' } })(),
     }))
 
-    onProgress?.({ agent: 'news', status: 'done', message: 'News analysis complete' })
+    const hasWarnings = warnings && warnings.length > 0
+    onProgress?.({
+      agent: 'news',
+      status: hasWarnings ? 'warning' : 'done',
+      message: hasWarnings ? 'News analysis completed with search warnings' : 'News analysis complete'
+    })
 
-    return { newsData, sources }
+    return { newsData, sources, errors: warnings || [] }
   } catch (err) {
     onProgress?.({ agent: 'news', status: 'error', message: err.message })
     return { errors: [`News: ${err.message}`] }

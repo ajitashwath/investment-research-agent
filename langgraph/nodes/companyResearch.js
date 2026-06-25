@@ -16,14 +16,15 @@ export async function companyResearchNode(state, config) {
       ticker = await searchTicker(company)
     }
 
+    const currentYear = new Date().getFullYear()
     const queries = [
-      `${company} company overview business model products services 2024`,
+      `${company} company overview business model products services ${currentYear}`,
       `${company} CEO leadership headquarters founded history`,
       `${company} competitive advantages moat market position`,
       ticker ? `${ticker} investor relations annual report` : `${company} revenue model how makes money`,
     ]
 
-    const { results, answer } = await tavilySearchMultiple(queries, { maxResults: 5 })
+        const { results, answer, warnings } = await tavilySearchMultiple(queries, { maxResults: 5, config })
 
     const quote = ticker ? await getQuote(ticker) : null
     const currency = quote?.currency || 'USD'
@@ -49,7 +50,7 @@ Detailed Sources:
 ${results.map(r => `[${r.title}] (${r.url})\n${r.content}`).join('\n\n---\n\n')}
 `
 
-    const llm = getGeminiFlash()
+    const llm = getGeminiFlash(config)
     const raw = await callGemini(llm, COMPANY_RESEARCH_PROMPT, context)
     const companyData = extractJSON(raw)
 
@@ -62,12 +63,18 @@ ${results.map(r => `[${r.title}] (${r.url})\n${r.content}`).join('\n\n---\n\n')}
       source: (() => { try { return new URL(r.url).hostname.replace('www.', '') } catch { return 'Unknown' } })(),
     }))
 
-    onProgress?.({ agent: 'company', status: 'done', message: 'Company research complete' })
+    const hasWarnings = warnings && warnings.length > 0
+    onProgress?.({
+      agent: 'company',
+      status: hasWarnings ? 'warning' : 'done',
+      message: hasWarnings ? 'Company research completed with search warnings' : 'Company research complete'
+    })
 
     return {
       ticker: companyData.ticker || ticker,
       companyData,
       sources,
+      errors: warnings || [],
     }
   } catch (err) {
     onProgress?.({ agent: 'company', status: 'error', message: err.message })

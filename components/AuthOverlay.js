@@ -102,8 +102,8 @@ export default function AuthOverlay({ onAuthSuccess }) {
         <div style={{
           width: '100%',
           display: 'flex',
-          alignItems: 'center',
-          gap: 8,
+          flexDirection: 'column',
+          gap: 6,
           background: 'var(--bg-sidebar)',
           border: '1px solid var(--border)',
           borderRadius: 8,
@@ -113,10 +113,17 @@ export default function AuthOverlay({ onAuthSuccess }) {
           marginBottom: 24,
           fontFamily: 'JetBrains Mono'
         }}>
-          {isCloud ? <Globe size={14} /> : <TrendingUp size={14} />}
-          <span>
-            {isCloud ? 'Supabase cloud storage active' : 'Local demo sandbox active'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isCloud ? <Cloud size={14} /> : <Database size={14} />}
+            <span style={{ fontWeight: 'bold' }}>
+              {isCloud ? 'Supabase cloud storage active' : 'Local demo sandbox active'}
+            </span>
+          </div>
+          {!isCloud && (
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 2, lineHeight: 1.4 }}>
+              ⚠️ Credentials are hashed using SHA-256 and session data is scoped transiently to this browser tab (sessionStorage).
+            </div>
+          )}
         </div>
 
         {/* Error / Success Alerts */}
@@ -332,11 +339,13 @@ export default function AuthOverlay({ onAuthSuccess }) {
           <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>·</span>
           <button 
             type="button" 
-            onClick={() => {
-              // Bypassing auth with a demo profile
-              const demoUser = { id: 'demo-user', email: 'demo@alphalens.io', user_metadata: { full_name: 'Demo Analyst' } }
-              localStorage.setItem('alpha_local_session', JSON.stringify(demoUser))
-              onAuthSuccess?.(demoUser)
+            onClick={async () => {
+              const { data, error } = await authService.signInDemo()
+              if (data?.user) {
+                onAuthSuccess?.(data.user)
+              } else if (error) {
+                setError(error.message)
+              }
             }}
             style={{ background: 'none', border: 'none', padding: 0, color: 'var(--text-secondary)', fontSize: 9, fontWeight: 500, cursor: 'pointer', textDecoration: 'underline' }}
           >

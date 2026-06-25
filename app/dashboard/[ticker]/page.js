@@ -12,11 +12,9 @@ import {
 import AuthOverlay from '../../../components/AuthOverlay.js'
 import SettingsModal, { applyTheme } from '../../../components/SettingsModal.js'
 import { authService } from '../../../services/auth.js'
-import {
-  LineChart, Line, AreaChart, Area, BarChart, Bar,
-  RadarChart, PolarGrid, PolarAngleAxis, Radar,
-  ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Cell,
-} from 'recharts'
+import OverviewPanel from '../../../components/dashboard/OverviewPanel.js'
+import FinancialsPanel from '../../../components/dashboard/FinancialsPanel.js'
+import RightSidebar from '../../../components/dashboard/RightSidebar.js'
 
 const NAV = [
   { id: 'overview', label: 'Overview', icon: Activity },
@@ -38,753 +36,6 @@ const AGENT_LABELS = {
   report: 'Final Report Gen',
 }
 
-function fmt(num, currency = 'USD') {
-  if (num == null) return 'N/A'
-  const isINR = currency === 'INR' || currency === 'inr'
-  const symbol = isINR ? '₹' : '$'
-  if (isINR) {
-    const abs = Math.abs(num)
-    if (abs >= 1e7) return `${symbol}${(num / 1e7).toFixed(2)} Cr`
-    if (abs >= 1e5) return `${symbol}${(num / 1e5).toFixed(2)} L`
-    return `${symbol}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  } else {
-    const abs = Math.abs(num)
-    if (abs >= 1e12) return `${symbol}${(num / 1e12).toFixed(2)}T`
-    if (abs >= 1e9) return `${symbol}${(num / 1e9).toFixed(1)}B`
-    if (abs >= 1e6) return `${symbol}${(num / 1e6).toFixed(1)}M`
-    return `${symbol}${num.toFixed(2)}`
-  }
-}
-
-function pct(num) {
-  if (num == null) return 'N/A'
-  return `${num > 0 ? '+' : ''}${num.toFixed(1)}%`
-}
-
-function scoreToGrade(score) {
-  if (score >= 95) return 'AAA'
-  if (score >= 88) return 'A+'
-  if (score >= 80) return 'A'
-  if (score >= 73) return 'A-'
-  if (score >= 67) return 'B+'
-  if (score >= 60) return 'B'
-  if (score >= 53) return 'B-'
-  if (score >= 45) return 'C+'
-  if (score >= 38) return 'C'
-  if (score >= 30) return 'C-'
-  return 'D'
-}
-
-function riskLabel(score) {
-  if (score >= 75) return 'Critical'
-  if (score >= 55) return 'High'
-  if (score >= 35) return 'Medium'
-  return 'Low'
-}
-
-function FactorGrade({ label, grade, trend, color }) {
-  const trendIcon = trend === 'up' ? <ArrowUp size={10} /> : trend === 'down' ? <ArrowDown size={10} /> : <Minus size={10} />
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div className="label" style={{ fontSize: 9 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-        <span style={{ fontSize: 20, fontWeight: 500, color: color || 'var(--text-primary)' }}>{grade}</span>
-        <span style={{ fontSize: 10, color: trend === 'up' ? 'var(--green)' : trend === 'down' ? 'var(--red)' : 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
-          {trendIcon}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-// ─── Pipeline Stepper (fixed: line doesn't go through circles) ─────────────────
-function HorizontalAnalysisStepper({ agentStatuses, isLoading }) {
-  const steps = [
-    { key: 'company', label: 'Macro Scan', desc: 'Industry' },
-    { key: 'financials', label: 'Financials', desc: 'Filings' },
-    { key: 'news', label: 'Sentiment', desc: 'News' },
-    { key: 'risk', label: 'Risk Model', desc: 'Exposure' },
-    { key: 'competitors', label: 'Competitors', desc: 'Mkt Share' },
-    { key: 'growth', label: 'Growth', desc: 'Intrinsic' },
-    { key: 'decision', label: 'AI Synthesis', desc: 'Verdict' },
-  ]
-
-  const DOTSIZE = 30
-
-  return (
-    <div className="card" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span className="label" style={{ fontSize: 10, letterSpacing: '0.08em' }}>Agent Research Pipeline</span>
-        <div style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
-          {isLoading ? (
-            <>
-              <div className="spinner" style={{ width: 10, height: 10, borderTopColor: 'var(--accent)' }} />
-              <span style={{ color: 'var(--text-secondary)' }}>Agents analyzing market disclosures…</span>
-            </>
-          ) : (
-            <span style={{ color: 'var(--green)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span>✓</span> Synthesis complete
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Steps row — connecting line drawn between dots, not through them */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', position: 'relative', padding: '6px 0', gap: 0 }}>
-        {steps.map(({ key, label, desc }, index) => {
-          const status = agentStatuses[key] || 'waiting'
-          const isDone = status === 'done'
-          const isRunning = status === 'running'
-          const isError = status === 'error'
-          const isLast = index === steps.length - 1
-
-          let circleColor = 'var(--border)'
-          let circleBg = 'var(--bg-card)'
-          let textColor = 'var(--text-muted)'
-          let lineColor = 'var(--border-light)'
-          
-          if (isDone) {
-            circleColor = 'var(--green)'
-            circleBg = 'rgba(52,199,113,0.06)'
-            textColor = 'var(--text-primary)'
-            lineColor = 'var(--green)'
-          } else if (isRunning) {
-            circleColor = 'var(--accent)'
-            circleBg = 'rgba(247,59,32,0.06)'
-            textColor = 'var(--accent)'
-          } else if (isError) {
-            circleColor = 'var(--red)'
-            circleBg = 'rgba(251,45,84,0.06)'
-            textColor = 'var(--red)'
-          }
-
-          return (
-            <div key={key} style={{ display: 'flex', flex: 1, alignItems: 'flex-start', minWidth: 0 }}>
-              {/* Step item */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '0 0 auto', position: 'relative', zIndex: 2 }}>
-                {/* Pulse ring for running state */}
-                {isRunning && (
-                  <motion.div
-                    style={{
-                      position: 'absolute',
-                      width: DOTSIZE + 12,
-                      height: DOTSIZE + 12,
-                      top: -(6),
-                      left: -(6),
-                      borderRadius: '50%',
-                      border: '1.5px solid var(--accent)',
-                      zIndex: 0,
-                    }}
-                    animate={{ scale: [1, 1.35, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                )}
-                {/* Circle dot — solid bg so connector line never shows through */}
-                <div style={{
-                  width: DOTSIZE, height: DOTSIZE,
-                  borderRadius: '50%',
-                  background: 'var(--bg)',
-                  border: `2px solid ${circleColor}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontWeight: 600,
-                  color: isDone ? 'var(--green)' : isRunning ? 'var(--accent)' : 'var(--text-muted)',
-                  transition: 'all 0.3s ease',
-                  position: 'relative', zIndex: 3,
-                  flexShrink: 0,
-                  boxShadow: isRunning ? '0 0 0 3px rgba(247,59,32,0.08)' : isDone ? '0 0 0 2px rgba(52,199,113,0.08)' : 'none',
-                }}>
-                  {isDone ? '✓' : isRunning
-                    ? <div className="spinner" style={{ width: 10, height: 10, borderTopColor: 'var(--accent)', borderWidth: 1.5 }} />
-                    : <span style={{ fontSize: 10 }}>{index + 1}</span>}
-                </div>
-
-                {/* Label */}
-                <div style={{ fontSize: 10.5, fontWeight: isDone || isRunning ? 500 : 400, color: textColor, marginTop: 8, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                  {label}
-                </div>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 1, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                  {desc}
-                </div>
-              </div>
-
-              {/* Connector line — sits at center height of the circle, between dots */}
-              {!isLast && (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', paddingTop: Math.floor(DOTSIZE / 2) - 1, position: 'relative', zIndex: 0 }}>
-                  <div style={{
-                    height: 2, width: '100%',
-                    background: isDone ? 'var(--green)' : 'var(--border-light)',
-                    transition: 'background 0.5s ease',
-                    borderRadius: 99,
-                  }} />
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-const CustomTooltip = ({ active, payload, label, currency = 'USD' }) => {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="custom-tooltip">
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
-      {payload.map((entry, i) => (
-        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 2 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: entry.color || entry.stroke }} />
-          <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{entry.name}:</span>
-          <span style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: 12 }}>
-            {typeof entry.value === 'number' && Math.abs(entry.value) > 1e4
-              ? fmt(entry.value, currency)
-              : entry.value != null ? entry.value?.toLocaleString?.() ?? entry.value : 'N/A'}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ─── Advanced Interactive KPI Card ───────────────────────────────────────────
-function KPICard({ label, value, sub, trend, color, sparkData }) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <motion.div
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      style={{
-        padding: '16px 18px', borderRadius: 16,
-        background: hovered ? 'var(--bg-card)' : 'var(--bg-sidebar)',
-        border: '1px solid var(--border-light)',
-        cursor: 'default', overflow: 'hidden', position: 'relative',
-        transition: 'all 0.25s ease',
-        boxShadow: hovered ? 'var(--shadow-sm)' : 'none',
-      }}
-      whileHover={{ y: -2 }}
-    >
-      {color && (
-        <div style={{
-          position: 'absolute', top: 0, right: 0, width: 3, height: '100%',
-          background: color, borderRadius: '0 16px 16px 0',
-        }} />
-      )}
-      <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 600, color: color || 'var(--text-primary)', marginBottom: 2 }}>{value}</div>
-      {sub && <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.3 }}>{sub}</div>}
-      {sparkData && hovered && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: 8 }}>
-          <ResponsiveContainer width="100%" height={36}>
-            <LineChart data={sparkData}>
-              <Line type="monotone" dataKey="v" stroke={color || 'var(--accent)'} strokeWidth={1.5} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </motion.div>
-      )}
-    </motion.div>
-  )
-}
-
-function FactorTable({ scores, isLoading, onReviewFactor }) {
-  if (isLoading) {
-    return (
-      <div className="card" style={{ padding: '24px 28px', marginBottom: 24 }}>
-        <div className="label" style={{ marginBottom: 16 }}>Core Investment Factors</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[1,2,3,4,5,6].map(i => <div key={i} className="skeleton" style={{ height: 48 }} />)}
-        </div>
-      </div>
-    )
-  }
-
-  const factorData = [
-    { id: 'financial', name: 'Financial Health', desc: 'Debt to equity, free cash flow margins, solvency ratio', val: scores.financial || 82, trend: 'up', driver: 'FCF margin > 22%, robust solvency ratio', weight: '25%' },
-    { id: 'growth', name: 'Growth Engine', desc: 'YoY revenue, CapEx efficiency, R&D momentum', val: scores.growth || 74, trend: 'up', driver: 'R&D expansion, strong enterprise subscription pipeline', weight: '20%' },
-    { id: 'moat', name: 'Economic Moat', desc: 'Pricing power, brand equity, high customer switching costs', val: scores.moat || 88, trend: 'up', driver: 'High switching costs & proprietary data lock-in', weight: '20%' },
-    { id: 'sentiment', name: 'Market Sentiment', desc: 'Institutional flows, analyst consensus, social momentum', val: scores.sentiment || 85, trend: 'up', driver: 'Heavy institutional inflows, positive news flow', weight: '15%' },
-    { id: 'valuation', name: 'Valuation Gap', desc: 'P/E vs peer group, price-to-FCF, DCF margin safety', val: scores.valuation || 52, trend: 'down', driver: 'P/E above historical mean, premium multiples', weight: '10%' },
-    { id: 'risk', name: 'Risk Exposure', desc: 'Macro exposures, regulatory risks, competitor pressure', val: scores.risk || 32, trend: 'neutral', driver: 'Regulatory headwinds, competitor expansion', weight: '10%', isRisk: true },
-  ]
-
-  return (
-    <div className="card" style={{ overflow: 'hidden', marginBottom: 24 }}>
-      <div style={{ padding: '18px 24px 12px', borderBottom: '1px solid var(--border)' }}>
-        <span className="label">Core Investment Factors</span>
-      </div>
-      <div style={{ overflowX: 'auto' }}>
-        <table className="premium-table">
-          <thead>
-            <tr>
-              <th style={{ paddingLeft: 24 }}>Factor</th>
-              <th>Rating</th>
-              <th>Score</th>
-              <th>Trend</th>
-              <th>Primary Driver</th>
-              <th>Weight</th>
-              <th style={{ textAlign: 'right', paddingRight: 24 }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {factorData.map(f => {
-              const grade = f.isRisk ? riskLabel(100 - f.val) : scoreToGrade(f.val)
-              const scoreText = f.isRisk ? `${(10 - f.val / 10).toFixed(1)}/10` : `${f.val}/100`
-              const dotColor = f.isRisk
-                ? (f.val < 35 ? 'var(--green)' : f.val < 65 ? 'var(--amber)' : 'var(--red)')
-                : (f.val >= 75 ? 'var(--green)' : f.val >= 50 ? 'var(--amber)' : 'var(--red)')
-              const trendText = f.trend === 'up' ? '▲' : f.trend === 'down' ? '▼' : '●'
-              const trendColor = f.trend === 'up' ? 'var(--green)' : f.trend === 'down' ? 'var(--red)' : 'var(--text-muted)'
-
-              return (
-                <tr key={f.id}>
-                  <td style={{ paddingLeft: 24 }}>
-                    <div style={{ color: 'var(--text-primary)', fontSize: 13, marginBottom: 2, fontWeight: 500 }}>{f.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{f.desc}</div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span className="badge-dot" style={{ background: dotColor }} />
-                      <span style={{ color: dotColor, fontWeight: 600, fontSize: 13 }}>{grade}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 48, height: 4, borderRadius: 99, background: 'var(--border-light)', overflow: 'hidden' }}>
-                        <div style={{ width: `${f.isRisk ? 100 - f.val : f.val}%`, height: '100%', background: dotColor, borderRadius: 99 }} />
-                      </div>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{scoreText}</span>
-                    </div>
-                  </td>
-                  <td style={{ color: trendColor, fontWeight: 500 }}>{trendText} {f.trend === 'up' ? 'Improving' : f.trend === 'down' ? 'Weakening' : 'Stable'}</td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: 12, maxWidth: 200 }}>{f.driver}</td>
-                  <td><span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{f.weight}</span></td>
-                  <td style={{ textAlign: 'right', paddingRight: 24 }}>
-                    <button
-                      onClick={() => onReviewFactor(f.id)}
-                      className="premium-table-btn"
-                    >
-                      Review →
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function RightSidebar({ result, isLoading }) {
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <div className="skeleton" style={{ height: 280, borderRadius: 16 }} />
-        <div className="skeleton" style={{ height: 160, borderRadius: 16 }} />
-      </div>
-    )
-  }
-
-  const decision = result?.decision
-  const financials = result?.financials
-  const risks = result?.risks
-  const currency = financials?.quote?.currency || 'USD'
-  const recColor = decision?.recommendation?.includes('BUY') ? 'var(--green)' : decision?.recommendation?.includes('SELL') ? 'var(--red)' : 'var(--amber)'
-  const recBg = decision?.recommendation?.includes('BUY') ? 'var(--green-bg)' : decision?.recommendation?.includes('SELL') ? 'var(--red-bg)' : 'var(--amber-bg)'
-
-  const currentPrice = financials?.quote?.regularMarketPrice || 0
-  const rawReturn = decision?.recommendation?.includes('BUY') ? 18.4 : decision?.recommendation?.includes('SELL') ? -12.5 : 2.5
-  const expectedReturn = decision?.expectedReturn || `${rawReturn > 0 ? '+' : ''}${rawReturn}%`
-
-  let targetPrice = decision?.targetPrice
-  if (!targetPrice && currentPrice) {
-    const multiplier = decision?.recommendation?.includes('BUY') ? 1.184 : decision?.recommendation?.includes('SELL') ? 0.875 : 1.025
-    const rawTarget = currentPrice * multiplier
-    targetPrice = currency === 'INR' ? `₹${rawTarget.toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : `$${rawTarget.toFixed(2)}`
-  }
-  if (!targetPrice) targetPrice = currency === 'INR' ? '₹4,320' : '$180'
-  const riskVal = risks?.overallRisk || 'medium'
-  const horizon = decision?.timeHorizon || '12 Months'
-
-  const confidence = decision?.confidence || 76
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Recommendation Card */}
-      <div className="card" style={{ padding: '22px 22px', overflow: 'hidden', position: 'relative' }}>
-        {/* Accent bar */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: recColor, borderRadius: '16px 16px 0 0' }} />
-        
-        <div className="label" style={{ marginBottom: 8, fontSize: 10 }}>AI Recommendation Verdict</div>
-        
-        {/* Big rec display */}
-        <div style={{ 
-          padding: '12px 16px', borderRadius: 12, 
-          background: recBg, border: `1px solid ${recColor}30`,
-          marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-        }}>
-          <span style={{ fontSize: 28, fontWeight: 600, color: recColor, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
-            {decision?.recommendation || 'Hold'}
-          </span>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Confidence</div>
-            <div style={{ fontSize: 18, fontWeight: 600, color: recColor }}>{confidence}%</div>
-          </div>
-        </div>
-
-        {/* Confidence bar */}
-        <div style={{ height: 4, borderRadius: 99, background: 'var(--border-light)', overflow: 'hidden', marginBottom: 14 }}>
-          <motion.div
-            style={{ height: '100%', borderRadius: 99, background: recColor }}
-            initial={{ width: 0 }}
-            animate={{ width: `${confidence}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-          />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-          {[
-            { label: 'Expected Return', value: expectedReturn, color: rawReturn >= 0 ? 'var(--green)' : 'var(--red)' },
-            { label: 'Target Price', value: targetPrice, color: 'var(--text-primary)' },
-            { label: 'Risk Rating', value: riskVal, color: riskVal === 'low' ? 'var(--green)' : riskVal === 'medium' ? 'var(--amber)' : 'var(--red)' },
-            { label: 'Horizon', value: horizon, color: 'var(--text-primary)' },
-          ].map(item => (
-            <div key={item.label} style={{ padding: '10px 12px', background: 'var(--bg-sidebar)', borderRadius: 10, border: '1px solid var(--border-light)' }}>
-              <div className="label" style={{ fontSize: 8, marginBottom: 2 }}>{item.label}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: item.color, textTransform: 'capitalize' }}>{item.value}</div>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div className="label" style={{ fontSize: 9, marginBottom: 8 }}>Primary Catalysts</div>
-          {(decision?.catalysts || ['Robust market share expansion', 'Consistent margin improvements', 'Strong cash flow yields']).slice(0, 3).map((c, i) => (
-            <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 5 }}>
-              <div style={{ width: 4, height: 4, borderRadius: '50%', background: recColor, marginTop: 5, flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{c}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Risk control card */}
-      <div className="card" style={{ padding: '18px 18px', background: 'var(--amber-bg)', border: '1px solid var(--amber-border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(247,59,32,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Shield size={13} color="var(--amber)" />
-          </div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--amber)' }}>AI-Powered Risk Control</span>
-        </div>
-        <p style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.55, margin: 0 }}>
-          Real-time auditing of regulatory filings, litigation risks, and governance exposures.
-        </p>
-      </div>
-
-      {/* Help footer */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', padding: '4px 0', opacity: 0.55 }}>
-        <HelpCircle size={12} color="var(--text-muted)" />
-        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Analyst Help & Documentation</span>
-      </div>
-    </div>
-  )
-}
-
-// ─── OVERVIEW PANEL ────────────────────────────────────────────────────────────
-function OverviewPanel({ result, agentStatuses, isLoading, onReviewFactor }) {
-  const decision = result?.decision
-  const financials = result?.financials
-  const news = result?.news
-  const scores = decision?.scores || {}
-  const currency = financials?.quote?.currency || 'USD'
-
-  const [timeframe, setTimeframe] = useState('3Y')
-
-  const fullRevenueData = financials?.revenueData?.map(d => ({
-    year: String(d.year),
-    Revenue: d.revenue,
-    'Net Income': d.netIncome,
-  })) || []
-
-  // FIX: 1Y = last 2 points, 3Y = last 4 points, Max = all
-  let revenueData = fullRevenueData
-  if (timeframe === '1Y') {
-    revenueData = fullRevenueData.slice(-2)
-  } else if (timeframe === '3Y') {
-    revenueData = fullRevenueData.slice(-4)
-  }
-  // Max = all data (no slice needed)
-
-  // Quick KPI summary cards
-  const kpiCards = [
-    { 
-      label: 'Revenue', 
-      value: fmt(financials?.revenue, currency),
-      sub: financials?.revenueGrowth ? `${financials.revenueGrowth > 0 ? '+' : ''}${financials.revenueGrowth.toFixed(1)}% YoY` : null,
-      color: 'var(--accent)',
-      trend: financials?.revenueGrowth > 0 ? 'up' : 'down',
-    },
-    { 
-      label: 'EBITDA', 
-      value: fmt(financials?.ebitda, currency),
-      sub: financials?.grossMargin ? `${financials.grossMargin.toFixed(1)}% Gross Margin` : null,
-      color: 'var(--blue)',
-    },
-    { 
-      label: 'Net Income', 
-      value: fmt(financials?.netIncome, currency),
-      sub: financials?.netMargin ? `${financials.netMargin.toFixed(1)}% Net Margin` : null,
-      color: 'var(--green)',
-    },
-    { 
-      label: 'Free Cash Flow', 
-      value: fmt(financials?.freeCashFlow, currency),
-      sub: financials?.returnOnEquity ? `ROE: ${financials.returnOnEquity.toFixed(1)}%` : null,
-      color: financials?.freeCashFlow > 0 ? 'var(--green)' : 'var(--red)',
-    },
-  ]
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%' }}>
-      {/* 1. Analysis Pipeline */}
-      <HorizontalAnalysisStepper agentStatuses={agentStatuses} isLoading={isLoading} />
-
-      {/* 2. KPI Row */}
-      {!isLoading && financials && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-          {kpiCards.map((kpi, i) => (
-            <motion.div
-              key={kpi.label}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
-            >
-              <KPICard {...kpi} />
-            </motion.div>
-          ))}
-        </div>
-      )}
-      {isLoading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 80, borderRadius: 16 }} />)}
-        </div>
-      )}
-
-      {/* 3. Core Factors Table */}
-      <FactorTable scores={scores} isLoading={isLoading} onReviewFactor={onReviewFactor} />
-
-      {/* 4. Bottom Grid: Chart + News */}
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 16 }}>
-        {/* Revenue Chart */}
-        <div className="card" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div className="label">Revenue & Income Trends</div>
-            <div style={{ display: 'flex', gap: 3, background: 'var(--bg-tag)', padding: 3, borderRadius: 99 }}>
-              {['1Y', '3Y', 'Max'].map(p => (
-                <button
-                  key={p}
-                  onClick={() => setTimeframe(p)}
-                  style={{
-                    padding: '3px 10px', borderRadius: 99, border: 'none',
-                    background: p === timeframe ? 'var(--bg-card)' : 'transparent',
-                    color: p === timeframe ? 'var(--text-primary)' : 'var(--text-muted)',
-                    fontSize: 10.5, fontWeight: p === timeframe ? 600 : 400,
-                    cursor: 'pointer', transition: 'all 0.15s',
-                    boxShadow: p === timeframe ? 'var(--shadow-sm)' : 'none',
-                    fontFamily: 'var(--font-sequel-sans)',
-                  }}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="skeleton" style={{ height: 150 }} />
-          ) : revenueData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={150}>
-              <AreaChart data={revenueData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.01} />
-                  </linearGradient>
-                  <linearGradient id="incGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--green)" stopOpacity={0.12} />
-                    <stop offset="95%" stopColor="var(--green)" stopOpacity={0.01} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
-                <XAxis dataKey="year" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={v => fmt(v, currency)} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} width={54} />
-                <Tooltip content={<CustomTooltip currency={currency} />} />
-                <Area type="monotone" dataKey="Revenue" stroke="var(--accent)" strokeWidth={2} fill="url(#revGrad)" dot={{ r: 3, fill: 'var(--accent)', strokeWidth: 0 }} />
-                <Area type="monotone" dataKey="Net Income" stroke="var(--green)" strokeWidth={2} fill="url(#incGrad)" strokeDasharray="5 3" dot={{ r: 3, fill: 'var(--green)', strokeWidth: 0 }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <div style={{ height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
-              No financial data available
-            </div>
-          )}
-
-          {/* Chart legend */}
-          {!isLoading && revenueData.length > 0 && (
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-              {[
-                { label: 'Revenue', color: 'var(--accent)' },
-                { label: 'Net Income', color: 'var(--green)', dashed: true },
-              ].map(l => (
-                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ 
-                    width: l.dashed ? 18 : 12, height: 2, 
-                    background: l.color, 
-                    borderRadius: 99,
-                    borderTop: l.dashed ? `2px dashed ${l.color}` : undefined,
-                    background: l.dashed ? 'transparent' : l.color,
-                  }} />
-                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{l.label}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* News Signals */}
-        <div className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Newspaper size={12} color="var(--text-secondary)" />
-            <span className="label">Signals & News</span>
-          </div>
-          {isLoading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 56 }} />)}
-            </div>
-          ) : news?.articles?.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
-              {news.articles.slice(0, 3).map((a, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: 8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  style={{ 
-                    paddingBottom: i < 2 ? 10 : 0, 
-                    borderBottom: i < 2 ? '1px solid var(--border-light)' : 'none' 
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{
-                      padding: '2px 8px', borderRadius: 99, fontSize: 9, fontWeight: 600,
-                      background: a.sentiment === 'positive' ? 'var(--green-bg)' : a.sentiment === 'negative' ? 'var(--red-bg)' : 'var(--amber-bg)',
-                      color: a.sentiment === 'positive' ? 'var(--green)' : a.sentiment === 'negative' ? 'var(--red)' : 'var(--amber)',
-                      textTransform: 'uppercase', letterSpacing: '0.04em',
-                    }}>
-                      {a.sentiment}
-                    </span>
-                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{a.date?.slice(0, 7) || ''}</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.4, marginBottom: 2, fontWeight: 500 }}>{a.headline}</p>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{a.source}</span>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>No signals recorded</div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function FinancialsPanel({ result }) {
-  const f = result?.financials
-  if (!f) return <EmptyState />
-  const currency = f.quote?.currency || 'USD'
-
-  const metrics = [
-    { label: 'Revenue Growth YoY', value: pct(f.revenueGrowth), positive: f.revenueGrowth > 0 },
-    { label: 'Gross Margin', value: f.grossMargin ? `${f.grossMargin.toFixed(1)}%` : 'N/A', positive: f.grossMargin > 30 },
-    { label: 'Net Margin', value: f.netMargin ? `${f.netMargin.toFixed(1)}%` : 'N/A', positive: f.netMargin > 10 },
-    { label: 'Free Cash Flow', value: fmt(f.freeCashFlow, currency), positive: f.freeCashFlow > 0 },
-    { label: 'Return on Equity', value: f.returnOnEquity ? `${f.returnOnEquity.toFixed(1)}%` : 'N/A', positive: f.returnOnEquity > 15 },
-    { label: 'Debt / Equity', value: f.debtToEquity?.toFixed(2) || 'N/A', positive: f.debtToEquity < 1 },
-    { label: 'Current Ratio', value: f.currentRatio?.toFixed(2) || 'N/A', positive: f.currentRatio > 1.5 },
-    { label: 'P/E Trailing', value: f.trailingPE?.toFixed(1) || 'N/A', positive: null },
-    { label: 'P/E Forward', value: f.forwardPE?.toFixed(1) || 'N/A', positive: null },
-    { label: 'Price / Book', value: f.priceToBook?.toFixed(2) || 'N/A', positive: null },
-    { label: 'EBITDA', value: fmt(f.ebitda, currency), positive: f.ebitda > 0 },
-    { label: 'Total Cash', value: fmt(f.totalCash, currency), positive: null },
-  ]
-
-  const revData = f.revenueData?.map(d => ({
-    year: String(d.year),
-    Revenue: d.revenue,
-    'Gross Profit': d.grossProfit,
-    'Net Income': d.netIncome,
-  })) || []
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div className="card" style={{ padding: '24px 28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-          <div style={{ padding: '8px 20px', borderRadius: 16, background: f.healthScore >= 75 ? 'var(--green-bg)' : f.healthScore >= 50 ? 'var(--amber-bg)' : 'var(--red-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 24, fontWeight: 600, color: f.healthScore >= 75 ? 'var(--green)' : f.healthScore >= 50 ? 'var(--amber)' : 'var(--red)' }}>{f.healthGrade}</span>
-          </div>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 3 }}>Financial Health — {f.healthScore}/100</div>
-            <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{f.healthReason}</p>
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
-          {metrics.map(({ label, value, positive }) => (
-            <div key={label} style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--bg-sidebar)', border: '1px solid var(--border-light)' }}>
-              <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: positive === true ? 'var(--green)' : positive === false ? 'var(--red)' : 'var(--text-primary)' }}>{value}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <div className="card" style={{ padding: '18px 22px' }}>
-          <div className="label" style={{ marginBottom: 14 }}>Revenue & Profitability</div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={revData} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
-              <XAxis dataKey="year" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tickFormatter={v => fmt(v, currency)} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} width={52} />
-              <Tooltip content={<CustomTooltip currency={currency} />} />
-              <Bar dataKey="Revenue" fill="var(--blue)" radius={[4,4,0,0]} opacity={0.8} />
-              <Bar dataKey="Gross Profit" fill="var(--accent)" radius={[4,4,0,0]} opacity={0.65} />
-              <Bar dataKey="Net Income" fill="var(--green)" radius={[4,4,0,0]} opacity={0.8} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="card" style={{ padding: '18px 22px' }}>
-          <div className="label" style={{ marginBottom: 14 }}>EPS Trend</div>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={f.revenueData?.map(d => ({ year: String(d.year), EPS: d.eps })) || []} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="epsG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.01} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
-              <XAxis dataKey="year" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tickFormatter={v => currency === 'INR' ? `₹${v.toFixed(1)}` : `$${v.toFixed(1)}`} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
-              <Tooltip content={<CustomTooltip currency={currency} />} />
-              <Area type="monotone" dataKey="EPS" stroke="var(--accent)" strokeWidth={2} fill="url(#epsG)" dot={{ r: 3, fill: 'var(--accent)', strokeWidth: 0 }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function NewsPanel({ result }) {
   const news = result?.news
@@ -914,7 +165,7 @@ function RiskPanel({ result }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div className="card" style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="card risk-header-grid" style={{ padding: '20px 24px' }}>
         <div>
           <div className="label" style={{ marginBottom: 8 }}>Overall Risk Level</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
@@ -1023,7 +274,7 @@ function CompetitorsPanel({ result }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="card" style={{ padding: '20px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 20 }}>
+        <div className="competitor-header-grid">
           <div>
             <div className="label" style={{ marginBottom: 8 }}>Competitive Position</div>
             <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{competitors.competitivePosition}</p>
@@ -1114,12 +365,12 @@ function AIInsightsPanel({ result }) {
   ] : []
 
   return (
-    <div style={{ display: 'flex', gap: 16 }}>
+    <div className="factors-sources-container">
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
         {decision && (
           <div className="card" style={{ padding: '20px 24px' }}>
             <div className="label" style={{ marginBottom: 14 }}>AI Factor Scores</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 16 }}>
+            <div className="factor-scores-grid">
               {factorScores.map(({ label, key, color }) => {
                 const score = decision.scores?.[key] || 0
                 return (
@@ -1150,7 +401,7 @@ function AIInsightsPanel({ result }) {
         )}
 
         {growth && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+          <div className="growth-grid">
             {[
               { label: 'Catalysts', items: growth.catalysts, color: 'var(--blue)', icon: Zap },
               { label: 'Tailwinds', items: growth.tailwinds, color: 'var(--green)', icon: TrendingUp },
@@ -1346,15 +597,29 @@ export default function DashboardPage({ params }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'inherit', transition: 'background 0.3s ease' }}>
       
+      {!authService.isSupabaseConfigured && (
+        <div style={{
+          background: 'var(--amber-bg, rgba(245, 158, 11, 0.08))',
+          borderBottom: '1px solid var(--amber-border, rgba(245, 158, 11, 0.15))',
+          color: 'var(--amber, #f59e0b)',
+          padding: '8px 16px',
+          fontSize: '11.5px',
+          fontWeight: '500',
+          textAlign: 'center',
+          fontFamily: 'JetBrains Mono, monospace',
+          zIndex: 100
+        }}>
+          ⚠️ Development Mode: Supabase not configured. Using mock local database.
+        </div>
+      )}
+
       {/* ─── TOP HEADER ─────────────────────────────────────────────────────── */}
-      <header style={{
-        height: 'var(--header-height)',
+      <header className="dashboard-header" style={{
         borderBottom: '1px solid var(--border)',
         background: 'var(--bg-sidebar)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 24px', position: 'sticky', top: 0, zIndex: 50,
+        position: 'sticky', top: 0, zIndex: 50,
       }}>
         {/* Left: Brand + Ticker */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -1389,7 +654,7 @@ export default function DashboardPage({ params }) {
         </div>
 
         {/* Center: Tab Navigation */}
-        <div style={{ display: 'flex', gap: 2, alignItems: 'center', background: 'var(--bg-tag)', padding: '4px', borderRadius: 99, border: '1px solid var(--border-light)' }}>
+        <div className="nav-tabs-container">
           {NAV.map(({ id, label }) => {
             const active = activeTab === id
             return (
@@ -1480,7 +745,7 @@ export default function DashboardPage({ params }) {
 
       {/* ─── MAIN WORKSPACE ───────────────────────────────────────────────────── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <main style={{ flex: 1, padding: '28px 24px', display: 'flex', gap: 28, maxWidth: 1480, margin: '0 auto', width: '100%' }}>
+        <main className="main-container" style={{ flex: 1, padding: '28px 24px', maxWidth: 1480, margin: '0 auto' }}>
           
           {/* Column A: Main Content */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -1490,6 +755,16 @@ export default function DashboardPage({ params }) {
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--red)', marginBottom: 6 }}>Analysis Failed</div>
                 <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>{error}</p>
                 <button onClick={runAnalysis} className="btn btn-primary">Retry</button>
+              </div>
+            )}
+
+            {result?.errors?.length > 0 && (
+              <div className="card" style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, border: '1.5px solid var(--amber-border)', background: 'var(--amber-bg)', color: 'var(--text-primary)' }}>
+                <AlertTriangle size={18} color="var(--amber)" style={{ flexShrink: 0 }} />
+                <div style={{ fontSize: 12.5, fontWeight: 500, lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 11, color: 'var(--amber)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2, fontWeight: 600 }}>System Notifications & Warnings</div>
+                  {result.errors.map((err, i) => <div key={i} style={{ color: 'var(--text-secondary)' }}>• {err}</div>)}
+                </div>
               </div>
             )}
 
@@ -1516,7 +791,7 @@ export default function DashboardPage({ params }) {
           </div>
 
           {/* Column B: Right Sidebar */}
-          <div style={{ width: 308, display: 'flex', flexDirection: 'column', gap: 16, flexShrink: 0, position: 'sticky', top: 'calc(var(--header-height) + 24px)', height: 'fit-content' }}>
+          <div className="right-sidebar">
             <RightSidebar result={result} isLoading={isLoading} />
           </div>
         </main>

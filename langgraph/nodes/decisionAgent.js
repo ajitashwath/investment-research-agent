@@ -78,7 +78,7 @@ Catalysts: ${growthData?.catalysts?.join('; ') || 'N/A'}
 Summary: ${growthData?.growthSummary || ''}
 `
 
-    const llm = getGeminiPro(undefined, config?.configurable?.model)
+    const llm = getGeminiPro(config, config?.configurable?.model)
     const raw = await callGemini(llm, DECISION_PROMPT, evidence)
     const decisionData = extractJSON(raw)
 

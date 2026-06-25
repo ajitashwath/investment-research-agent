@@ -31,24 +31,29 @@ export async function financialsAgentNode(state, config) {
     const resolvedTicker = ticker || companyData?.ticker
     if (!resolvedTicker) throw new Error('No ticker available for financial analysis')
 
+    let warnings = []
     let financials = await getFinancials(resolvedTicker)
     if (!financials) {
       onProgress?.({ agent: 'financials', status: 'running', message: 'Yahoo API blocked. Searching web for financials...' })
       
       const quote = await getQuote(resolvedTicker)
+      const currentYear = new Date().getFullYear()
+      const prevYear = currentYear - 1
       const queries = [
-        `${company} ${resolvedTicker} key financial metrics statistics 2024 2025 revenue net income balance sheet valuation PE ratio`,
-        `${company} ${resolvedTicker} income statement balance sheet cash flow statement annual quarterly 2023 2024`
+        `${company} ${resolvedTicker} key financial metrics statistics ${prevYear} ${currentYear} revenue net income balance sheet valuation PE ratio`,
+        `${company} ${resolvedTicker} income statement balance sheet cash flow statement annual quarterly ${prevYear - 1} ${prevYear}`
       ]
       
-      const { results } = await tavilySearchMultiple(queries, { maxResults: 5 })
+      const searchRes = await tavilySearchMultiple(queries, { maxResults: 5, config })
+      const results = searchRes.results
+      warnings = searchRes.warnings || []
       const fallbackContext = `
 Company: ${company}
 Ticker: ${resolvedTicker}
 Web Search Financial Data:
 ${results.map(r => `Title: ${r.title}\nContent: ${r.content}`).join('\n\n---\n\n')}
 `
-      const llm = getGeminiFlash()
+      const llm = getGeminiFlash(config)
       const rawExtracted = await callGemini(llm, FINANCIALS_EXTRACTION_PROMPT, fallbackContext)
       financials = extractJSON(rawExtracted)
       
@@ -126,7 +131,7 @@ HISTORICAL:
 ${financials.revenueData.map(d => `${d.year}: Revenue=${fmt(d.revenue, currency)}, Net Income=${fmt(d.netIncome, currency)}, Gross=${fmt(d.grossProfit, currency)}, EPS=${d.eps != null ? (currency === 'INR' ? '₹' : '$') + d.eps.toFixed(2) : 'N/A'}`).join('\n')}
 `
 
-    const llm = getGeminiFlash()
+    const llm = getGeminiFlash(config)
     const rawResponse = await callGemini(llm, FINANCIAL_HEALTH_PROMPT, financialContext)
     const health = extractJSON(rawResponse)
 
@@ -137,9 +142,14 @@ ${financials.revenueData.map(d => `${d.year}: Revenue=${fmt(d.revenue, currency)
       healthReason: health.healthReason ?? 'Assessment unavailable',
     }
 
-    onProgress?.({ agent: 'financials', status: 'done', message: 'Financial analysis complete' })
+    const hasWarnings = warnings && warnings.length > 0
+    onProgress?.({
+      agent: 'financials',
+      status: hasWarnings ? 'warning' : 'done',
+      message: hasWarnings ? 'Financial analysis completed with search warnings' : 'Financial analysis complete'
+    })
 
-    return { financialData }
+    return { financialData, errors: warnings }
   } catch (err) {
     onProgress?.({ agent: 'financials', status: 'error', message: err.message })
     return { errors: [`Financials: ${err.message}`] }

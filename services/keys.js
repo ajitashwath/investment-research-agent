@@ -8,14 +8,15 @@ export function setCustomKeys(geminiKey, tavilyKey, depth) {
   if (depth) _depth = depth
 }
 
-export function getGeminiKey() {
-  return _geminiKey || process.env.GEMINI_API_KEY
+export function getGeminiKey(config) {
+  return config?.configurable?.geminiKey || _geminiKey || process.env.GEMINI_API_KEY
 }
 
-export function getTavilyKey() {
-  return _tavilyKey || process.env.TAVILY_API_KEY
+export function getTavilyKey(config) {
+  return config?.configurable?.tavilyKey || _tavilyKey || process.env.TAVILY_API_KEY
 }
 
-export function getSearchDepth() {
-  return _depth
+export function getSearchDepth(config) {
+  return config?.configurable?.depth || _depth
 }
+

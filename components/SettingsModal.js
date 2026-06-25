@@ -315,7 +315,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogOut }) {
           background: 'var(--bg-card)',
           borderRadius: 24,
           border: '1px solid var(--border-light)',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+          boxShadow: 'none',
           display: 'flex',
           overflow: 'hidden',
           color: 'var(--text-primary)'

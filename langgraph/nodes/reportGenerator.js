@@ -69,7 +69,7 @@ Bear Case: ${decisionData?.keyBullets?.bearCase?.join('; ') || ''}
 Time Horizon: ${decisionData?.timeHorizon || '12 months'}
 `
 
-    const llm = getGeminiFlash()
+    const llm = getGeminiFlash(config)
     const report = await callGemini(llm, REPORT_PROMPT, context)
 
     onProgress?.({ agent: 'report', status: 'done', message: 'Report generated' })

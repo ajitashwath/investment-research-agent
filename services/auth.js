@@ -15,11 +15,71 @@ export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
 
-// Mock Database for fallback demo mode
+// Helper functions for base64 encoding/decoding of Unicode strings
+function base64Encode(str) {
+  if (typeof window === 'undefined') return ''
+  return btoa(unescape(encodeURIComponent(str)))
+}
+
+function base64Decode(str) {
+  if (typeof window === 'undefined') return ''
+  return decodeURIComponent(escape(atob(str)))
+}
+
+// Password hashing function (SHA-256 via Web Crypto API)
+async function hashPassword(password) {
+  if (typeof window === 'undefined') return password
+  try {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(password)
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  } catch (err) {
+    console.error('Password hashing failed, falling back to plaintext:', err)
+    return password
+  }
+}
+
+// Mock JWT helpers for mock session tokens
+const createMockJWT = (user) => {
+  if (typeof window === 'undefined') return ''
+  const header = base64Encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+  const payload = base64Encode(JSON.stringify({
+    sub: user.id,
+    email: user.email,
+    user_metadata: user.user_metadata,
+    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours validity
+  }))
+  const signature = 'mock-signature'
+  return `${header}.${payload}.${signature}`
+}
+
+const parseMockJWT = (token) => {
+  if (!token) return null
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const payload = JSON.parse(base64Decode(parts[1]))
+    if (payload.exp < Math.floor(Date.now() / 1000)) {
+      return null // Token expired
+    }
+    return {
+      id: payload.sub,
+      email: payload.email,
+      user_metadata: payload.user_metadata
+    }
+  } catch (err) {
+    console.error('Failed to parse mock JWT token:', err)
+    return null
+  }
+}
+
+// Mock Database using sessionStorage for transient sandbox sessions
 const getLocalUsers = () => {
   if (typeof window === 'undefined') return []
   try {
-    return JSON.parse(localStorage.getItem('alpha_local_users') || '[]')
+    return JSON.parse(sessionStorage.getItem('alpha_local_users') || '[]')
   } catch {
     return []
   }
@@ -27,24 +87,22 @@ const getLocalUsers = () => {
 
 const saveLocalUsers = (users) => {
   if (typeof window === 'undefined') return
-  localStorage.setItem('alpha_local_users', JSON.stringify(users))
+  sessionStorage.setItem('alpha_local_users', JSON.stringify(users))
 }
 
 const getLocalSession = () => {
   if (typeof window === 'undefined') return null
-  try {
-    return JSON.parse(localStorage.getItem('alpha_local_session') || 'null')
-  } catch {
-    return null
-  }
+  const token = sessionStorage.getItem('alpha_local_token')
+  return parseMockJWT(token)
 }
 
 const saveLocalSession = (user) => {
   if (typeof window === 'undefined') return
   if (user) {
-    localStorage.setItem('alpha_local_session', JSON.stringify(user))
+    const token = createMockJWT(user)
+    sessionStorage.setItem('alpha_local_token', token)
   } else {
-    localStorage.removeItem('alpha_local_session')
+    sessionStorage.removeItem('alpha_local_token')
   }
 }
 
@@ -69,10 +127,11 @@ export const authService = {
         return { data: null, error: { message: 'User already exists' } }
       }
       
+      const hashedPassword = await hashPassword(password)
       const newUser = {
         id: 'mock-user-' + Math.random().toString(36).substr(2, 9),
         email,
-        password, // saved in plaintext for demo only, ok for local fallback mock
+        password: hashedPassword,
         user_metadata: metadata,
         created_at: new Date().toISOString()
       }
@@ -100,7 +159,8 @@ export const authService = {
     } else {
       // Mock Auth SignIn
       const users = getLocalUsers()
-      const user = users.find(u => u.email === email && u.password === password)
+      const hashedPassword = await hashPassword(password)
+      const user = users.find(u => u.email === email && u.password === hashedPassword)
       
       if (!user) {
         return { data: null, error: { message: 'Invalid email or password' } }
@@ -113,6 +173,21 @@ export const authService = {
       listeners.forEach(cb => cb('SIGNED_IN', sessionUser))
       
       return { data: { user: sessionUser }, error: null }
+    }
+  },
+
+  async signInDemo() {
+    if (isSupabaseConfigured) {
+      return { data: null, error: { message: 'Demo bypass is not available when Supabase is active' } }
+    } else {
+      const demoUser = {
+        id: 'demo-user',
+        email: 'demo@alphalens.io',
+        user_metadata: { full_name: 'Demo Analyst' }
+      }
+      saveLocalSession(demoUser)
+      listeners.forEach(cb => cb('SIGNED_IN', demoUser))
+      return { data: { user: demoUser }, error: null }
     }
   },
   

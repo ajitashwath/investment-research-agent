@@ -7,6 +7,7 @@ import {
   Search, TrendingUp, ArrowRight, Globe, Home, ChevronDown, ChevronUp, LifeBuoy,
   Zap, Star, ArrowUpRight
 } from 'lucide-react'
+import { authService } from '../services/auth.js'
 
 const SUGGESTIONS = [
   'Reliance Industries', 'Tata Consultancy Services', 'HDFC Bank', 
@@ -503,6 +504,22 @@ export default function HomePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#ffffff', display: 'flex', flexDirection: 'column', overflowX: 'hidden', fontFamily: 'var(--font-sequel-sans)' }}>
+
+      {!authService.isSupabaseConfigured && (
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.08)',
+          borderBottom: '1px solid rgba(245, 158, 11, 0.15)',
+          color: '#f59e0b',
+          padding: '8px 16px',
+          fontSize: '11.5px',
+          fontWeight: '500',
+          textAlign: 'center',
+          fontFamily: 'JetBrains Mono, monospace',
+          zIndex: 100
+        }}>
+          ⚠️ Development Mode: Supabase not configured. Using mock local database.
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════
           HERO
@@ -1013,8 +1030,8 @@ export default function HomePage() {
             cursor: 'pointer', fontSize: 13.5, fontWeight: 500,
             color: '#360802', fontFamily: 'var(--font-sequel-sans)',
           }}
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          initial={{ y: 80, opacity: 0, borderColor: 'rgba(54,8,2,0.09)' }}
+          animate={{ y: 0, opacity: 1, borderColor: 'rgba(54,8,2,0.09)' }}
           transition={{ duration: 0.65, delay: 0.6, type: 'spring', stiffness: 120 }}
           whileHover={{ borderColor: '#f73b20', scale: 1.02 }}
         >

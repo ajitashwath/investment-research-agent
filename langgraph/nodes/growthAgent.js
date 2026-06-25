@@ -9,14 +9,15 @@ export async function growthAgentNode(state, config) {
   onProgress?.({ agent: 'growth', status: 'running', message: 'Analyzing growth prospects...' })
 
   try {
+    const currentYear = new Date().getFullYear()
     const queries = [
-      `${company} growth strategy expansion plans 2024 2025 2026`,
+      `${company} growth strategy expansion plans ${currentYear - 1} ${currentYear} ${currentYear + 1}`,
       `${company} total addressable market TAM opportunity size`,
       `${companyData?.industry || company} market growth trends outlook`,
       `${company} product roadmap innovation pipeline`,
     ]
 
-    const { results } = await tavilySearchMultiple(queries, { maxResults: 5 })
+    const { results, warnings } = await tavilySearchMultiple(queries, { maxResults: 5, config })
 
     const context = `
 Company: ${company} (${ticker || ''})
@@ -33,7 +34,7 @@ Growth Research:
 ${results.map(r => `[${r.title}]\n${r.content}`).join('\n\n---\n\n')}
 `
 
-    const llm = getGeminiFlash()
+    const llm = getGeminiFlash(config)
     const raw = await callGemini(llm, GROWTH_ANALYSIS_PROMPT, context)
     const growthData = extractJSON(raw)
 
@@ -41,9 +42,14 @@ ${results.map(r => `[${r.title}]\n${r.content}`).join('\n\n---\n\n')}
     if (!Array.isArray(growthData.tailwinds)) growthData.tailwinds = []
     if (!Array.isArray(growthData.headwinds)) growthData.headwinds = []
 
-    onProgress?.({ agent: 'growth', status: 'done', message: 'Growth analysis complete' })
+    const hasWarnings = warnings && warnings.length > 0
+    onProgress?.({
+      agent: 'growth',
+      status: hasWarnings ? 'warning' : 'done',
+      message: hasWarnings ? 'Growth analysis completed with search warnings' : 'Growth analysis complete'
+    })
 
-    return { growthData }
+    return { growthData, errors: warnings || [] }
   } catch (err) {
     onProgress?.({ agent: 'growth', status: 'error', message: err.message })
     return { errors: [`Growth: ${err.message}`] }

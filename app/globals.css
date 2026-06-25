@@ -413,3 +413,205 @@ h1, h2, h3, h4, h5, h6 {
   border: var(--btn-primary-border, none);
   box-shadow: var(--shadow-sm);
 }
+
+/* Responsive adjustments for mobile/smaller devices */
+.main-container {
+  display: flex;
+  flex-direction: row;
+  gap: 28px;
+  width: 100%;
+}
+
+.right-sidebar {
+  width: 308px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex-shrink: 0;
+  position: sticky;
+  top: calc(var(--header-height) + 24px);
+  height: fit-content;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: var(--header-height);
+}
+
+.nav-tabs-container {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  background: var(--bg-tag);
+  padding: 4px;
+  border-radius: 99px;
+  border: 1px solid var(--border-light);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.factor-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.growth-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+}
+
+.financial-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.financial-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.risk-header-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.competitor-header-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.stepper-container {
+  width: 100%;
+}
+
+.stepper-row {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  padding: 6px 0;
+  gap: 0;
+  width: 100%;
+}
+
+.factors-sources-container {
+  display: flex;
+  gap: 16px;
+}
+
+/* Media Queries */
+@media (max-width: 1024px) {
+  .main-container {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+  .right-sidebar {
+    width: 100% !important;
+    position: static !important;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .financial-metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .factors-sources-container {
+    flex-direction: column !important;
+  }
+  .factors-sources-container > div {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column !important;
+    height: auto !important;
+    padding: 12px 16px !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+  .dashboard-header > div {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .nav-tabs-container {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+    justify-content: flex-start !important;
+    padding: 4px 8px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-tabs-container::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-tabs-container button {
+    flex: 0 0 auto !important;
+  }
+  .stepper-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+  }
+  .stepper-container::-webkit-scrollbar {
+    display: none;
+  }
+  .stepper-row {
+    min-width: 760px !important;
+  }
+  .factor-scores-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .growth-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .financial-charts-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .risk-header-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .competitor-header-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .financial-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .factor-scores-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+

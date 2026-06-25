@@ -23,77 +23,34 @@ const GraphState = Annotation.Root({
   errors: Annotation({ reducer: (x, y) => [...(x || []), ...(y || [])], default: () => [] }),
 })
 
-async function parallelResearchNode(state, config) {
-  const onProgress = config?.configurable?.onProgress
-
-  onProgress?.({ agent: 'parallel', status: 'running', message: 'Running parallel analysis...' })
-
-  const [financialResult, newsResult, riskResult, competitorResult, growthResult] =
-    await Promise.allSettled([
-      financialsAgentNode(state, config),
-      newsAgentNode(state, config),
-      riskAgentNode(state, config),
-      competitorAgentNode(state, config),
-      growthAgentNode(state, config),
-    ])
-
-  const updates = {}
-  const errors = []
-
-  if (financialResult.status === 'fulfilled') {
-    if (financialResult.value.financialData) updates.financialData = financialResult.value.financialData
-    if (financialResult.value.errors) errors.push(...financialResult.value.errors)
-  } else if (financialResult.status === 'rejected') {
-    errors.push(`Financials: ${financialResult.reason?.message}`)
-  }
-
-  if (newsResult.status === 'fulfilled') {
-    if (newsResult.value.newsData) {
-      updates.newsData = newsResult.value.newsData
-      updates.sources = newsResult.value.sources || []
-    }
-    if (newsResult.value.errors) errors.push(...newsResult.value.errors)
-  } else if (newsResult.status === 'rejected') {
-    errors.push(`News: ${newsResult.reason?.message}`)
-  }
-
-  if (riskResult.status === 'fulfilled') {
-    if (riskResult.value.riskData) updates.riskData = riskResult.value.riskData
-    if (riskResult.value.errors) errors.push(...riskResult.value.errors)
-  } else if (riskResult.status === 'rejected') {
-    errors.push(`Risk: ${riskResult.reason?.message}`)
-  }
-
-  if (competitorResult.status === 'fulfilled') {
-    if (competitorResult.value.competitorData) updates.competitorData = competitorResult.value.competitorData
-    if (competitorResult.value.errors) errors.push(...competitorResult.value.errors)
-  } else if (competitorResult.status === 'rejected') {
-    errors.push(`Competitors: ${competitorResult.reason?.message}`)
-  }
-
-  if (growthResult.status === 'fulfilled') {
-    if (growthResult.value.growthData) updates.growthData = growthResult.value.growthData
-    if (growthResult.value.errors) errors.push(...growthResult.value.errors)
-  } else if (growthResult.status === 'rejected') {
-    errors.push(`Growth: ${growthResult.reason?.message}`)
-  }
-
-  onProgress?.({ agent: 'parallel', status: 'done', message: 'Parallel analysis complete' })
-
-  return { ...updates, errors }
-}
-
 export function buildInvestmentGraph() {
   const graph = new StateGraph(GraphState)
 
   graph.addNode('company_research', companyResearchNode)
-  graph.addNode('parallel_research', parallelResearchNode)
+  graph.addNode('financials_agent', financialsAgentNode)
+  graph.addNode('news_agent', newsAgentNode)
+  graph.addNode('risk_agent', riskAgentNode)
+  graph.addNode('competitor_agent', competitorAgentNode)
+  graph.addNode('growth_agent', growthAgentNode)
   graph.addNode('decision_agent', decisionAgentNode)
   graph.addNode('report_gen', reportGeneratorNode)
 
   graph.addEdge(START, 'company_research')
-  graph.addEdge('company_research', 'parallel_research')
-  graph.addEdge('parallel_research', 'decision_agent')
+
+  // Tier 1 Parallel Research
+  graph.addEdge('company_research', 'financials_agent')
+  graph.addEdge('company_research', 'news_agent')
+  graph.addEdge('company_research', 'competitor_agent')
+
+  // Tier 2 Parallel Research (Data Dependency Resolution)
+  graph.addEdge('financials_agent', 'growth_agent')
+  graph.addEdge('news_agent', 'risk_agent')
+
+  // Fan-in / Join to Decision Agent
+  graph.addEdge('growth_agent', 'decision_agent')
+  graph.addEdge('risk_agent', 'decision_agent')
+  graph.addEdge('competitor_agent', 'decision_agent')
+
   graph.addEdge('decision_agent', 'report_gen')
   graph.addEdge('report_gen', END)
 
