@@ -580,7 +580,7 @@ export default function HomePage() {
               </motion.button>
             )}
             <motion.button
-              onClick={() => router.push('/dashboard/NVIDIA')}
+              onClick={() => router.push('/dashboard')}
               style={{
                 background: '#360802', border: 'none', color: '#ffffff',
                 fontSize: 13, padding: '10px 22px', borderRadius: '13px',
@@ -871,7 +871,7 @@ export default function HomePage() {
               No credit card required. Instant AI-generated research report.
             </p>
             <motion.button
-              onClick={() => router.push('/dashboard/NVIDIA')}
+              onClick={() => router.push('/dashboard')}
               style={{
                 padding: '16px 44px', borderRadius: '14px',
                 background: '#ffffff', border: 'none',
@@ -1011,7 +1011,7 @@ export default function HomePage() {
 
                         {item.options.map(opt => (
                           <motion.button key={opt}
-                            onClick={() => { setDropdownActive(null); router.push('/dashboard/NVIDIA') }}
+                            onClick={() => { setDropdownActive(null); router.push('/dashboard') }}
                             style={{
                               padding: '8px 12px', background: 'rgba(254, 245, 243, 0)', border: 'none',
                               borderRadius: '10px', textAlign: 'left', fontSize: 13,

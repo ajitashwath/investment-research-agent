@@ -707,7 +707,7 @@ export default function DashboardPage({ params }) {
 
           <div style={{ width: 1, height: 16, background: 'var(--border)' }} />
 
-          <button className="btn-ghost btn" style={{ width: 32, height: 32, padding: 0, justifyContent: 'center', borderRadius: '50%' }} onClick={() => router.push('/')} title="Search New Stock">
+          <button className="btn-ghost btn" style={{ width: 32, height: 32, padding: 0, justifyContent: 'center', borderRadius: '50%' }} onClick={() => router.push('/dashboard')} title="Search New Stock">
             <Search size={14} />
           </button>
 

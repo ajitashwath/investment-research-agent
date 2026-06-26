@@ -214,7 +214,7 @@ export default function AccountPage() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <button 
-            onClick={() => router.push('/dashboard/NVIDIA')}
+            onClick={() => router.push('/dashboard')}
             style={{
               background: 'var(--btn-primary-bg, #ffffff)',
               color: 'var(--btn-primary-text, var(--accent))',
