@@ -1,5 +1,6 @@
 import { runInvestmentAnalysis } from '../../../langgraph/graph.js'
 import { setCustomKeys } from '../../../services/keys.js'
+import { checkRateLimit } from '../../../utils/rateLimiter.js'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -10,6 +11,7 @@ export async function POST(request) {
   let tavilyKey
   let model
   let depth
+  let userId
   try {
     const body = await request.json()
     company = body?.company
@@ -17,9 +19,27 @@ export async function POST(request) {
     tavilyKey = body?.tavilyKey
     model = body?.model
     depth = body?.depth
+    userId = body?.userId
   } catch (err) {
     return new Response(JSON.stringify({ error: 'Invalid or missing JSON body' }), {
       status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  // Rate Limiting
+  const ip = request.headers.get('x-forwarded-for') || 
+             request.headers.get('x-real-ip') || 
+             '127.0.0.1'
+  const rateLimitIdentifier = userId || ip
+
+  const rateLimitResult = await checkRateLimit(rateLimitIdentifier)
+  if (!rateLimitResult.allowed) {
+    const resetTimeStr = new Date(rateLimitResult.resetTime).toLocaleTimeString()
+    return new Response(JSON.stringify({ 
+      error: `Rate limit exceeded. You have reached your daily limit of ${rateLimitResult.max} analyses. Please try again after ${resetTimeStr}.` 
+    }), {
+      status: 429,
       headers: { 'Content-Type': 'application/json' },
     })
   }

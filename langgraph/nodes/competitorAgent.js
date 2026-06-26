@@ -11,10 +11,7 @@ export async function competitorAgentNode(state, config) {
   try {
     const currentYear = new Date().getFullYear()
     const queries = [
-      `${company} main competitors rivals ${currentYear} market share`,
-      `${companyData?.industry || company} top companies competitive landscape`,
-      `${company} vs competitors comparison strengths weaknesses`,
-      `${company} competitive advantages moat market position`,
+      `${company} (${ticker || ''}) top competitors and rivals, market share comparison, strengths, weaknesses, competitive advantages, and economic moat`
     ]
 
     const { results, warnings } = await tavilySearchMultiple(queries, { maxResults: 5, config })

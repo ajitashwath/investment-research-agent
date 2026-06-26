@@ -11,10 +11,7 @@ export async function riskAgentNode(state, config) {
   try {
     const currentYear = new Date().getFullYear()
     const queries = [
-      `${company} risks challenges threats ${currentYear - 1} ${currentYear}`,
-      `${company} ${companyData?.industry || ''} regulatory risk compliance`,
-      `${company} competition market risk supply chain`,
-      `${company} geopolitical legal financial risk`,
+      `${company} (${ticker || ''}) business risks, market competition, regulatory compliance challenges, supply chain, geopolitical, and financial threats`
     ]
 
     const { results, warnings } = await tavilySearchMultiple(queries, { maxResults: 5, config })

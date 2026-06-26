@@ -529,17 +529,27 @@ export default function DashboardPage({ params }) {
 
     const geminiKey = typeof window !== 'undefined' ? (localStorage.getItem('alpha_custom_gemini_key') || '') : ''
     const tavilyKey = typeof window !== 'undefined' ? (localStorage.getItem('alpha_custom_tavily_key') || '') : ''
-    const model = typeof window !== 'undefined' ? (localStorage.getItem('alpha_terminal_model') || 'gemini-2.5-flash-lite') : 'gemini-2.5-flash-lite'
+    let model = typeof window !== 'undefined' ? (localStorage.getItem('alpha_terminal_model') || 'gemini-2.5-flash-lite') : 'gemini-2.5-flash-lite'
+    if (model === 'gemini-1.5-flash' || model === 'gemini-1.5-pro') {
+      model = 'gemini-2.5-flash-lite'
+    }
     const depth = typeof window !== 'undefined' ? (localStorage.getItem('alpha_terminal_depth') || 'advanced') : 'advanced'
 
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company, geminiKey, tavilyKey, model, depth }),
+        body: JSON.stringify({ company, geminiKey, tavilyKey, model, depth, userId: user?.id }),
         signal: abortRef.current.signal,
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        let errMsg = `HTTP ${res.status}`
+        try {
+          const errData = await res.json()
+          if (errData && errData.error) errMsg = errData.error
+        } catch (_) {}
+        throw new Error(errMsg)
+      }
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()

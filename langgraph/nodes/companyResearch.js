@@ -18,10 +18,8 @@ export async function companyResearchNode(state, config) {
 
     const currentYear = new Date().getFullYear()
     const queries = [
-      `${company} company overview business model products services ${currentYear}`,
-      `${company} CEO leadership headquarters founded history`,
-      `${company} competitive advantages moat market position`,
-      ticker ? `${ticker} investor relations annual report` : `${company} revenue model how makes money`,
+      `${company} (${ticker || ''}) company overview, business model, CEO leadership, and headquarters history`,
+      `${company} competitive advantages, market positioning, moat, and revenue model`
     ]
 
         const { results, answer, warnings } = await tavilySearchMultiple(queries, { maxResults: 5, config })

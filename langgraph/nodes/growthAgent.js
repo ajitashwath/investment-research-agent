@@ -11,10 +11,7 @@ export async function growthAgentNode(state, config) {
   try {
     const currentYear = new Date().getFullYear()
     const queries = [
-      `${company} growth strategy expansion plans ${currentYear - 1} ${currentYear} ${currentYear + 1}`,
-      `${company} total addressable market TAM opportunity size`,
-      `${companyData?.industry || company} market growth trends outlook`,
-      `${company} product roadmap innovation pipeline`,
+      `${company} (${ticker || ''}) growth strategy, expansion plans, TAM (total addressable market), future industry outlook, and product roadmap innovation pipeline`
     ]
 
     const { results, warnings } = await tavilySearchMultiple(queries, { maxResults: 5, config })

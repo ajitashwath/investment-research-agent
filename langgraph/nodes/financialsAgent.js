@@ -40,8 +40,7 @@ export async function financialsAgentNode(state, config) {
       const currentYear = new Date().getFullYear()
       const prevYear = currentYear - 1
       const queries = [
-        `${company} ${resolvedTicker} key financial metrics statistics ${prevYear} ${currentYear} revenue net income balance sheet valuation PE ratio`,
-        `${company} ${resolvedTicker} income statement balance sheet cash flow statement annual quarterly ${prevYear - 1} ${prevYear}`
+        `${company} (${resolvedTicker}) financial metrics, revenue, net income, balance sheet, cash flows, and valuation ratios for ${prevYear} ${currentYear}`
       ]
       
       const searchRes = await tavilySearchMultiple(queries, { maxResults: 5, config })

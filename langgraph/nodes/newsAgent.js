@@ -13,10 +13,7 @@ export async function newsAgentNode(state, config) {
     const currentYear = new Date().getFullYear()
     const prevYear = currentYear - 1
     const queries = [
-      `${company} ${resolvedTicker} latest news ${prevYear} ${currentYear}`,
-      `${company} earnings revenue analyst rating upgrade downgrade`,
-      `${company} acquisition merger partnership product launch`,
-      `${company} lawsuit regulation antitrust investigation`,
+      `${company} (${resolvedTicker}) latest news, earnings announcements, analyst ratings, mergers, partnerships, and legal or regulatory developments`
     ]
 
     const { results, warnings } = await tavilySearchMultiple(queries, {

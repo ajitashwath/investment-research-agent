@@ -234,7 +234,11 @@ export default function SettingsModal({ isOpen, onClose, user, onLogOut }) {
       const savedTheme = localStorage.getItem('alpha_terminal_theme_v2') || 'jeton'
       setTheme(savedTheme)
       
-      const savedModel = localStorage.getItem('alpha_terminal_model') || 'gemini-2.5-flash-lite'
+      let savedModel = localStorage.getItem('alpha_terminal_model') || 'gemini-2.5-flash-lite'
+      if (savedModel === 'gemini-1.5-flash' || savedModel === 'gemini-1.5-pro') {
+        savedModel = 'gemini-2.5-flash-lite'
+        localStorage.setItem('alpha_terminal_model', 'gemini-2.5-flash-lite')
+      }
       setModel(savedModel)
       
       const savedDepth = localStorage.getItem('alpha_terminal_depth') || 'advanced'
