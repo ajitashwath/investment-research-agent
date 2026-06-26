@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, TrendingUp, ArrowRight, Globe, Home, ChevronDown, ChevronUp, LifeBuoy,
-  Zap, Star, ArrowUpRight
+  Zap, Star, ArrowUpRight, User
 } from 'lucide-react'
 import { authService } from '../services/auth.js'
 
@@ -455,9 +455,17 @@ export default function HomePage() {
   const [filtered, setFiltered] = useState([])
   const [loading, setLoading] = useState(false)
   const [dropdownActive, setDropdownActive] = useState(null)
+  const [user, setUser] = useState(null)
   const inputRef = useRef(null)
   const router = useRouter()
   const ctaRef = useRef(null)
+
+  useEffect(() => {
+    const unsubscribe = authService.onAuthStateChange((event, sessionUser) => {
+      setUser(sessionUser)
+    })
+    return () => unsubscribe()
+  }, [])
 
   useEffect(() => {
     if (query.length > 0) {
@@ -554,7 +562,23 @@ export default function HomePage() {
             </span>
           </motion.div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {user && (
+              <motion.button
+                onClick={() => router.push('/account')}
+                style={{
+                  background: 'rgba(54,8,2,0.04)', border: '1px solid rgba(54,8,2,0.15)', color: '#360802',
+                  fontSize: 13, padding: '10px 22px', borderRadius: '13px',
+                  fontFamily: 'var(--font-sequel-sans)', fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}
+                whileHover={{ scale: 1.03, background: 'rgba(54,8,2,0.08)' }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <User size={14} />
+                My Account
+              </motion.button>
+            )}
             <motion.button
               onClick={() => router.push('/dashboard/NVIDIA')}
               style={{

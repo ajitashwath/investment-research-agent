@@ -619,26 +619,53 @@ export default function SettingsModal({ isOpen, onClose, user, onLogOut }) {
                 </div>
               </div>
 
-              <button
-                onClick={onLogOut}
-                style={{
-                  padding: '10px 16px',
-                  background: 'var(--red-bg)',
-                  color: 'var(--red)',
-                  border: '1px solid var(--red-border)',
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  width: 'fit-content'
-                }}
-              >
-                <LogOut size={14} />
-                <span>Terminate Session (Sign Out)</span>
-              </button>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => {
+                    onClose();
+                    window.location.href = '/account';
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    background: 'var(--bg-tag)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    width: 'fit-content',
+                    fontFamily: 'inherit'
+                  }}
+                >
+                  <User size={14} />
+                  <span>Open Account Dashboard</span>
+                </button>
+
+                <button
+                  onClick={onLogOut}
+                  style={{
+                    padding: '10px 16px',
+                    background: 'var(--red-bg)',
+                    color: 'var(--red)',
+                    border: '1px solid var(--red-border)',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    width: 'fit-content'
+                  }}
+                >
+                  <LogOut size={14} />
+                  <span>Terminate Session (Sign Out)</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

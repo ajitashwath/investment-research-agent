@@ -12,6 +12,7 @@ import {
 import AuthOverlay from '../../../components/AuthOverlay.js'
 import SettingsModal, { applyTheme } from '../../../components/SettingsModal.js'
 import { authService } from '../../../services/auth.js'
+import { reportsService } from '../../../services/reports.js'
 import OverviewPanel from '../../../components/dashboard/OverviewPanel.js'
 import FinancialsPanel from '../../../components/dashboard/FinancialsPanel.js'
 import RightSidebar from '../../../components/dashboard/RightSidebar.js'
@@ -559,6 +560,10 @@ export default function DashboardPage({ params }) {
             } else if (ev.type === 'result') {
               setResult(ev.data)
               setIsLoading(false)
+              if (user?.id) {
+                reportsService.saveReport(user.id, ev.data.ticker || company, ev.data.company?.name || company, ev.data)
+                  .catch(err => console.error('Failed to save report:', err))
+              }
             } else if (ev.type === 'error') {
               setError(ev.message)
               setIsLoading(false)
@@ -711,9 +716,9 @@ export default function DashboardPage({ params }) {
           </button>
 
           <div
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => router.push('/account')}
             style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '3px', borderRadius: '50%', background: 'var(--bg-tag)', border: '1px solid var(--border-light)' }}
-            title="User Profile"
+            title="User Profile Dashboard"
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
             onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-tag)'}
           >

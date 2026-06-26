@@ -182,7 +182,7 @@ export const authService = {
     } else {
       const demoUser = {
         id: 'demo-user',
-        email: 'demo@alphalens.io',
+        email: 'demo@prisma.io',
         user_metadata: { full_name: 'Demo Analyst' }
       }
       saveLocalSession(demoUser)
@@ -211,6 +211,42 @@ export const authService = {
       return { user, error: null }
     }
   },
+
+  async updateUser(metadata = {}) {
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase.auth.updateUser({
+        data: metadata
+      })
+      return { data: data || null, error }
+    } else {
+      const currentSession = getLocalSession()
+      if (!currentSession) {
+        return { data: null, error: { message: 'No active session' } }
+      }
+      
+      const updatedUser = {
+        ...currentSession,
+        user_metadata: {
+          ...currentSession.user_metadata,
+          ...metadata
+        }
+      }
+      saveLocalSession(updatedUser)
+      
+      const users = getLocalUsers()
+      const idx = users.findIndex(u => u.id === currentSession.id)
+      if (idx !== -1) {
+        users[idx].user_metadata = {
+          ...users[idx].user_metadata,
+          ...metadata
+        }
+        saveLocalUsers(users)
+      }
+      
+      listeners.forEach(cb => cb('USER_UPDATED', updatedUser))
+      return { data: { user: updatedUser }, error: null }
+    }
+  },
   
   onAuthStateChange(callback) {
     if (isSupabaseConfigured) {
@@ -220,7 +256,6 @@ export const authService = {
       return () => subscription.unsubscribe()
     } else {
       listeners.add(callback)
-      // Call once with current state
       const currentUser = getLocalSession()
       callback(currentUser ? 'SIGNED_IN' : 'INITIAL_SESSION', currentUser)
       

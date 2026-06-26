@@ -88,7 +88,7 @@ export default function AuthOverlay({ onAuthSuccess }) {
         {/* Logo and Terminal Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, opacity: 0.8 }}>
           <TrendingUp size={14} color="var(--text-secondary)" />
-          <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.2em', color: 'var(--text-secondary)' }}>ALPHALENS</span>
+          <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.2em', color: 'var(--text-secondary)' }}>PRISMA</span>
         </div>
 
         <h2 style={{ fontSize: 22, fontWeight: 500, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 10, textAlign: 'center' }}>
