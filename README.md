@@ -1,4 +1,4 @@
-# Prisma — Multi-Agentic AI Investment Research System
+# Prisma: Multi-Agentic AI Investment Research System
 Multi-agent investment research system powered by **LangGraph.js**, **Google Gemini 2.5**, **Tavily**, and **Yahoo Finance**.
 
 ## Stack
