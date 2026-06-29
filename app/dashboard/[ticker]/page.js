@@ -529,11 +529,11 @@ export default function DashboardPage({ params }) {
 
     const geminiKey = typeof window !== 'undefined' ? (localStorage.getItem('alpha_custom_gemini_key') || '') : ''
     const tavilyKey = typeof window !== 'undefined' ? (localStorage.getItem('alpha_custom_tavily_key') || '') : ''
-    let model = typeof window !== 'undefined' ? (localStorage.getItem('alpha_terminal_model') || 'gemini-2.5-flash-lite') : 'gemini-2.5-flash-lite'
-    if (model === 'gemini-1.5-flash' || model === 'gemini-1.5-pro') {
-      model = 'gemini-2.5-flash-lite'
+    let model = typeof window !== 'undefined' ? (localStorage.getItem('alpha_terminal_model') || 'gemini-2.5-flash') : 'gemini-2.5-flash'
+    if (model === 'gemini-1.5-flash' || model === 'gemini-1.5-pro' || model === 'gemini-2.5-flash-lite') {
+      model = 'gemini-2.5-flash'
     }
-    const depth = typeof window !== 'undefined' ? (localStorage.getItem('alpha_terminal_depth') || 'advanced') : 'advanced'
+    const depth = typeof window !== 'undefined' ? (localStorage.getItem('alpha_terminal_depth') || 'basic') : 'basic'
 
     try {
       const res = await fetch('/api/analyze', {

@@ -1,6 +1,6 @@
 let _geminiKey = null
 let _tavilyKey = null
-let _depth = 'advanced'
+let _depth = 'basic'
 
 export function setCustomKeys(geminiKey, tavilyKey, depth) {
   _geminiKey = geminiKey ? geminiKey.trim() : null

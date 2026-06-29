@@ -223,8 +223,8 @@ export const applyTheme = (themeName) => {
 export default function SettingsModal({ isOpen, onClose, user, onLogOut }) {
   const [activeTab, setActiveTab] = useState('appearance')
   const [theme, setTheme] = useState('jeton')
-  const [model, setModel] = useState('gemini-2.5-flash-lite')
-  const [depth, setDepth] = useState('advanced')
+  const [model, setModel] = useState('gemini-2.5-flash')
+  const [depth, setDepth] = useState('basic')
   const [geminiKey, setGeminiKey] = useState('')
   const [tavilyKey, setTavilyKey] = useState('')
   const [keysSaved, setKeysSaved] = useState(false)
@@ -234,14 +234,14 @@ export default function SettingsModal({ isOpen, onClose, user, onLogOut }) {
       const savedTheme = localStorage.getItem('alpha_terminal_theme_v2') || 'jeton'
       setTheme(savedTheme)
       
-      let savedModel = localStorage.getItem('alpha_terminal_model') || 'gemini-2.5-flash-lite'
-      if (savedModel === 'gemini-1.5-flash' || savedModel === 'gemini-1.5-pro') {
-        savedModel = 'gemini-2.5-flash-lite'
-        localStorage.setItem('alpha_terminal_model', 'gemini-2.5-flash-lite')
+      let savedModel = localStorage.getItem('alpha_terminal_model') || 'gemini-2.5-flash'
+      if (savedModel === 'gemini-1.5-flash' || savedModel === 'gemini-1.5-pro' || savedModel === 'gemini-2.5-flash-lite') {
+        savedModel = 'gemini-2.5-flash'
+        localStorage.setItem('alpha_terminal_model', 'gemini-2.5-flash')
       }
       setModel(savedModel)
       
-      const savedDepth = localStorage.getItem('alpha_terminal_depth') || 'advanced'
+      const savedDepth = localStorage.getItem('alpha_terminal_depth') || 'basic'
       setDepth(savedDepth)
 
       setGeminiKey(localStorage.getItem('alpha_custom_gemini_key') || '')
@@ -456,15 +456,15 @@ export default function SettingsModal({ isOpen, onClose, user, onLogOut }) {
                   <label style={{ fontSize: 10, fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Intelligence Engine</label>
                   <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 8, padding: 3 }}>
                     <button
-                      onClick={() => changeModel('gemini-2.5-flash-lite')}
+                      onClick={() => changeModel('gemini-2.5-flash')}
                       style={{
                         flex: 1, padding: '8px', border: 'none',
-                        background: model === 'gemini-2.5-flash-lite' ? 'rgba(255,255,255,0.08)' : 'transparent',
-                        color: model === 'gemini-2.5-flash-lite' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        background: model === 'gemini-2.5-flash' ? 'rgba(255,255,255,0.08)' : 'transparent',
+                        color: model === 'gemini-2.5-flash' ? 'var(--text-primary)' : 'var(--text-secondary)',
                         borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer'
                       }}
                     >
-                      Gemini Flash Lite (Fast)
+                      Gemini Flash (Standard)
                     </button>
                     <button
                       onClick={() => changeModel('gemini-2.5-pro')}

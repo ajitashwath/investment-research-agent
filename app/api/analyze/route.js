@@ -61,7 +61,7 @@ export async function POST(request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
       }
 
-      const agentOrder = ['company', 'financials', 'news', 'risk', 'competitors', 'growth', 'decision', 'report']
+      const agentOrder = ['company', 'financials', 'news', 'risk', 'competitors', 'growth', 'decision']
       const agentProgress = {}
 
       agentOrder.forEach((a) => { agentProgress[a] = 0 })

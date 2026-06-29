@@ -3,7 +3,7 @@ import path from 'path'
 
 const STORE_PATH = path.join(process.cwd(), 'rate-limit-store.json')
 const WINDOW_MS = 24 * 60 * 60 * 1000 // 24 hours
-const MAX_REQUESTS = 20
+const MAX_REQUESTS = 100
 
 class Mutex {
   constructor() {

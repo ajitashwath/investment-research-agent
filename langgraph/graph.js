@@ -6,7 +6,6 @@ import { riskAgentNode } from './nodes/riskAgent.js'
 import { competitorAgentNode } from './nodes/competitorAgent.js'
 import { growthAgentNode } from './nodes/growthAgent.js'
 import { decisionAgentNode } from './nodes/decisionAgent.js'
-import { reportGeneratorNode } from './nodes/reportGenerator.js'
 
 const GraphState = Annotation.Root({
   company: Annotation({ reducer: (x, y) => y ?? x, default: () => '' }),
@@ -33,26 +32,28 @@ export function buildInvestmentGraph() {
   graph.addNode('competitor_agent', competitorAgentNode)
   graph.addNode('growth_agent', growthAgentNode)
   graph.addNode('decision_agent', decisionAgentNode)
-  graph.addNode('report_gen', reportGeneratorNode)
 
+  // Phase 1: Company research (establishes ticker + companyData for all agents)
   graph.addEdge(START, 'company_research')
 
-  // Tier 1 Parallel Research
+  // Phase 2: TRUE parallel — all 5 research agents fire simultaneously
+  // Key fix: growth and risk no longer wait for financials/news.
+  // They use companyData (which is all they need for their own Tavily queries).
   graph.addEdge('company_research', 'financials_agent')
   graph.addEdge('company_research', 'news_agent')
+  graph.addEdge('company_research', 'risk_agent')
   graph.addEdge('company_research', 'competitor_agent')
+  graph.addEdge('company_research', 'growth_agent')
 
-  // Tier 2 Parallel Research (Data Dependency Resolution)
-  graph.addEdge('financials_agent', 'growth_agent')
-  graph.addEdge('news_agent', 'risk_agent')
-
-  // Fan-in / Join to Decision Agent
-  graph.addEdge('growth_agent', 'decision_agent')
+  // Phase 3: Fan-in — decision waits for ALL 5 research agents
+  // Then produces investment decision + full report in a single LLM call
+  graph.addEdge('financials_agent', 'decision_agent')
+  graph.addEdge('news_agent', 'decision_agent')
   graph.addEdge('risk_agent', 'decision_agent')
   graph.addEdge('competitor_agent', 'decision_agent')
+  graph.addEdge('growth_agent', 'decision_agent')
 
-  graph.addEdge('decision_agent', 'report_gen')
-  graph.addEdge('report_gen', END)
+  graph.addEdge('decision_agent', END)
 
   return graph.compile()
 }
@@ -61,7 +62,7 @@ export async function runInvestmentAnalysis(company, onProgress, options = {}) {
   const graph = buildInvestmentGraph()
   const result = await graph.invoke(
     { company, sources: [], errors: [] },
-    { configurable: { onProgress, ...options }, recursionLimit: 50 }
+    { configurable: { onProgress, ...options }, recursionLimit: 25 }
   )
   return result
 }
